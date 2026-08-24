@@ -27,6 +27,10 @@ public class SeatService {
 		return seatRepository.findByEventId(eventId);
 	}
 
+	public List<Seat> getSeatsForEvent(UUID eventId, SeatStatus status) {
+		return seatRepository.findByEventIdAndStatus(eventId, status);
+	}
+
 	public Seat getSeatForEvent(UUID eventId, String seatNumber) {
 		return seatRepository.findByEventIdAndSeatNumber(eventId, seatNumber)
 				.orElseThrow(() -> new ResourceNotFoundException(

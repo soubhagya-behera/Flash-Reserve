@@ -54,7 +54,7 @@ class SecurityIntegrationTests {
 
 	private static final String LOGIN_URL = "/api/auth/login";
 
-	private static final String FUTURE_PROTECTED_PATH = "/api/events";
+	private static final String FUTURE_PROTECTED_PATH = "/api/bookings";
 
 	private static final String FUTURE_ADMIN_PATH = "/api/admin/events";
 
@@ -69,6 +69,9 @@ class SecurityIntegrationTests {
 
 	@Autowired
 	private JwtService jwtService;
+
+	private static final String ADMIN_CREATE_BODY = """
+			{"name":"Sample Event","description":"d","venue":"Hall A","eventDate":"2027-01-01T18:00:00Z","totalSeats":5}""";
 
 	private String registerBody(String email) {
 		return """
@@ -222,12 +225,16 @@ class SecurityIntegrationTests {
 	}
 
 	@Test
-	void validUserTokenPassesSecurityLayerAndReachesRouting() throws Exception {
+	void validUserTokenPassesSecurityLayerOnPublicEventListing() throws Exception {
 		String token = registerAndGetToken("role-user@example.test");
 
 		mockMvc.perform(get(FUTURE_PROTECTED_PATH)
 						.header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
 				.andExpect(status().isNotFound());
+
+		mockMvc.perform(get("/api/events")
+						.header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+				.andExpect(status().isOk());
 	}
 
 	@Test
@@ -249,9 +256,11 @@ class SecurityIntegrationTests {
 		String token = jwtService.generateToken(admin);
 		assertThat(jwtService.parseToken(token).role()).isEqualTo(UserRole.ADMIN);
 
-		mockMvc.perform(get(FUTURE_ADMIN_PATH)
-						.header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
-				.andExpect(status().isNotFound());
+		mockMvc.perform(post(FUTURE_ADMIN_PATH)
+						.header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(ADMIN_CREATE_BODY))
+				.andExpect(status().isCreated());
 	}
 
 }

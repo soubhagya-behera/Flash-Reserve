@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageRequest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -76,7 +77,7 @@ class RepositoryServiceTests {
 	void allDerivedQueryMethodsExecuteSuccessfully() {
 		assertThat(userRepository.existsByEmail(UNKNOWN_EMAIL)).isFalse();
 
-		assertThat(eventRepository.findByStatus(EventStatus.PUBLISHED)).isEmpty();
+		assertThat(eventRepository.findByStatus(EventStatus.PUBLISHED, PageRequest.of(0, 10)).getContent()).isEmpty();
 
 		assertThat(seatRepository.findByEventId(UNKNOWN_ID)).isEmpty();
 		assertThat(seatRepository.findByEventIdAndSeatNumber(UNKNOWN_ID, "A-1")).isEmpty();
@@ -95,8 +96,9 @@ class RepositoryServiceTests {
 	@Test
 	void servicesAreWiredAndCommunicateMissingEntities() {
 		assertThat(userService.existsByEmail(UNKNOWN_EMAIL)).isFalse();
-		assertThat(eventService.getPublishedEvents()).isEmpty();
+		assertThat(eventService.getPublishedEvents(PageRequest.of(0, 10)).getContent()).isEmpty();
 		assertThat(seatService.getSeatsForEvent(UNKNOWN_ID)).isEmpty();
+		assertThat(seatService.getSeatsForEvent(UNKNOWN_ID, SeatStatus.AVAILABLE)).isEmpty();
 		assertThat(seatService.getAvailableSeats(UNKNOWN_ID)).isEmpty();
 		assertThat(bookingService.getBookingsByUser(UNKNOWN_ID)).isEmpty();
 		assertThat(bookingService.getBookingsByEvent(UNKNOWN_ID)).isEmpty();

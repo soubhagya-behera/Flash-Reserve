@@ -18,6 +18,7 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @RestControllerAdvice
@@ -32,6 +33,12 @@ public class ApiExceptionHandler {
 
 	@ExceptionHandler(DuplicateEmailException.class)
 	public ResponseEntity<ApiError> handleDuplicateEmail(DuplicateEmailException ex, HttpServletRequest request) {
+		return build(HttpStatus.CONFLICT, ex.getMessage(), request);
+	}
+
+	@ExceptionHandler(InvalidStateTransitionException.class)
+	public ResponseEntity<ApiError> handleInvalidStateTransition(InvalidStateTransitionException ex,
+			HttpServletRequest request) {
 		return build(HttpStatus.CONFLICT, ex.getMessage(), request);
 	}
 
@@ -64,6 +71,12 @@ public class ApiExceptionHandler {
 	public ResponseEntity<ApiError> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex,
 			HttpServletRequest request) {
 		return build(HttpStatus.METHOD_NOT_ALLOWED, "Method not allowed", request);
+	}
+
+	@ExceptionHandler(MethodArgumentTypeMismatchException.class)
+	public ResponseEntity<ApiError> handleTypeMismatch(MethodArgumentTypeMismatchException ex,
+			HttpServletRequest request) {
+		return build(HttpStatus.BAD_REQUEST, "Invalid parameter value", request);
 	}
 
 	@ExceptionHandler(Exception.class)
