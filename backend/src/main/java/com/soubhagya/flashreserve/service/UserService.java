@@ -1,8 +1,10 @@
 package com.soubhagya.flashreserve.service;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import com.soubhagya.flashreserve.entity.User;
+import com.soubhagya.flashreserve.entity.enums.UserRole;
 import com.soubhagya.flashreserve.exception.ResourceNotFoundException;
 import com.soubhagya.flashreserve.repository.UserRepository;
 
@@ -28,6 +30,14 @@ public class UserService {
 
 	public boolean existsByEmail(String email) {
 		return userRepository.existsByEmail(email);
+	}
+
+	public Optional<User> findByEmail(String email) {
+		return userRepository.findByEmail(email);
+	}
+
+	public User createUser(String name, String email, String encodedPassword, UserRole role) {
+		return userRepository.save(new User(name, email, encodedPassword, role));
 	}
 
 }
