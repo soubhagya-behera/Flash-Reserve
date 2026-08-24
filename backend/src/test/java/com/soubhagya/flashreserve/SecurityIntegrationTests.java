@@ -54,6 +54,10 @@ class SecurityIntegrationTests {
 
 	private static final String LOGIN_URL = "/api/auth/login";
 
+	private static final String FUTURE_PROTECTED_PATH = "/api/events";
+
+	private static final String FUTURE_ADMIN_PATH = "/api/admin/events";
+
 	@Autowired
 	private MockMvc mockMvc;
 
@@ -111,16 +115,25 @@ class SecurityIntegrationTests {
 	}
 
 	@Test
-	void registrationRejectsInvalidPayloads() throws Exception {
+	void registrationRejectsInvalidPayloadsWithFieldErrors() throws Exception {
 		String body = """
 				{"name":"","email":"not-an-email","password":"short"}""";
 		mockMvc.perform(post(REGISTER_URL)
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(body))
 				.andExpect(status().isBadRequest())
-				.andExpect(jsonPath("$.errors.name").exists())
-				.andExpect(jsonPath("$.errors.email").exists())
-				.andExpect(jsonPath("$.errors.password").exists());
+				.andExpect(jsonPath("$.fieldErrors.name").exists())
+				.andExpect(jsonPath("$.fieldErrors.email").exists())
+				.andExpect(jsonPath("$.fieldErrors.password").exists());
+	}
+
+	@Test
+	void malformedJsonBodyIsRejectedAsBadRequest() throws Exception {
+		mockMvc.perform(post(LOGIN_URL)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("{not-json"))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.message").value("Malformed request body"));
 	}
 
 	@Test
@@ -177,15 +190,16 @@ class SecurityIntegrationTests {
 	}
 
 	@Test
-	void protectedEndpointRejectsUnauthenticatedRequests() throws Exception {
-		mockMvc.perform(get("/api/demo/me"))
+	void protectedEndpointsRejectUnauthenticatedRequests() throws Exception {
+		mockMvc.perform(get(FUTURE_PROTECTED_PATH))
 				.andExpect(status().isUnauthorized())
-				.andExpect(jsonPath("$.message").value("Authentication required"));
+				.andExpect(jsonPath("$.message").value("Authentication required"))
+				.andExpect(jsonPath("$.status").value(401));
 	}
 
 	@Test
 	void invalidJwtIsRejectedOnProtectedEndpoint() throws Exception {
-		mockMvc.perform(get("/api/demo/me")
+		mockMvc.perform(get(FUTURE_PROTECTED_PATH)
 						.header(HttpHeaders.AUTHORIZATION, "Bearer not-a-real-token"))
 				.andExpect(status().isUnauthorized());
 	}
@@ -202,40 +216,42 @@ class SecurityIntegrationTests {
 				.signWith(key)
 				.compact();
 
-		mockMvc.perform(get("/api/demo/me")
+		mockMvc.perform(get(FUTURE_PROTECTED_PATH)
 						.header(HttpHeaders.AUTHORIZATION, "Bearer " + expiredToken))
 				.andExpect(status().isUnauthorized());
 	}
 
 	@Test
-	void userRoleCanAccessUserEndpointsButNotAdminEndpoints() throws Exception {
+	void validUserTokenPassesSecurityLayerAndReachesRouting() throws Exception {
 		String token = registerAndGetToken("role-user@example.test");
 
-		mockMvc.perform(get("/api/demo/me")
+		mockMvc.perform(get(FUTURE_PROTECTED_PATH)
 						.header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.email").value("role-user@example.test"))
-				.andExpect(jsonPath("$.role").value("USER"));
-
-		mockMvc.perform(get("/api/admin/ping")
-						.header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
-				.andExpect(status().isForbidden())
-				.andExpect(jsonPath("$.message").value("Access denied"));
+				.andExpect(status().isNotFound());
 	}
 
 	@Test
-	void adminRoleCanAccessAdminEndpoints() throws Exception {
+	void userTokenIsForbiddenOnAdminArea() throws Exception {
+		String token = registerAndGetToken("admin-area-user@example.test");
+
+		mockMvc.perform(get(FUTURE_ADMIN_PATH)
+						.header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+				.andExpect(status().isForbidden())
+				.andExpect(jsonPath("$.message").value("Access denied"))
+				.andExpect(jsonPath("$.status").value(403));
+	}
+
+	@Test
+	void adminTokenPassesAdminAuthorizationRule() throws Exception {
 		User admin = userRepository.save(new User("Admin", "admin-role@example.test",
 				passwordEncoder.encode("admin-password-123"), UserRole.ADMIN));
 
 		String token = jwtService.generateToken(admin);
-
-		mockMvc.perform(get("/api/admin/ping")
-						.header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.status").value("admin-ok"));
-
 		assertThat(jwtService.parseToken(token).role()).isEqualTo(UserRole.ADMIN);
+
+		mockMvc.perform(get(FUTURE_ADMIN_PATH)
+						.header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+				.andExpect(status().isNotFound());
 	}
 
 }

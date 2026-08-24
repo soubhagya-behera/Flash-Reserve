@@ -3,7 +3,6 @@ package com.soubhagya.flashreserve.security;
 import java.io.IOException;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 
@@ -15,6 +14,8 @@ import jakarta.servlet.http.HttpServletResponse;
 @Component
 public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
+	private static final String MESSAGE = "Authentication required";
+
 	private final SecurityErrorWriter errorWriter;
 
 	public RestAuthenticationEntryPoint(SecurityErrorWriter errorWriter) {
@@ -24,7 +25,7 @@ public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
 	@Override
 	public void commence(HttpServletRequest request, HttpServletResponse response,
 			AuthenticationException authException) throws IOException {
-		errorWriter.write(response, HttpStatus.UNAUTHORIZED, "Authentication required");
+		errorWriter.write(request, response, HttpStatus.UNAUTHORIZED, MESSAGE);
 	}
 
 }
