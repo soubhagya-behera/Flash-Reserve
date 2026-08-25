@@ -19,4 +19,6 @@ public interface SeatRepository extends JpaRepository<Seat, UUID> {
 
 	List<Seat> findByEventIdAndStatus(UUID eventId, SeatStatus status);
 
+	Optional<Seat> findByIdAndEventId(UUID id, UUID eventId);
+
 }

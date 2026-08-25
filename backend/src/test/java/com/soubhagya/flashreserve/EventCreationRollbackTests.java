@@ -73,6 +73,7 @@ class EventCreationRollbackTests {
 
 	@Test
 	void failedSeatInventoryCreationRollsBackEventCompletely() throws Exception {
+		long eventCountBefore = eventRepository.count();
 		given(seatRepository.saveAll(any())).willThrow(new RuntimeException("simulated inventory failure"));
 
 		mockMvc.perform(post("/api/admin/events")
@@ -85,8 +86,9 @@ class EventCreationRollbackTests {
 				.andExpect(jsonPath("$.message").value("Unexpected internal error"))
 				.andExpect(jsonPath("$.status").value(500));
 
-		assertThat(eventRepository.count()).as("no event row may survive a failed inventory creation").isZero();
-		assertThat(eventRepository.findAll()).isEmpty();
+		assertThat(eventRepository.count())
+				.as("failed inventory creation must not persist the event")
+				.isEqualTo(eventCountBefore);
 	}
 
 }

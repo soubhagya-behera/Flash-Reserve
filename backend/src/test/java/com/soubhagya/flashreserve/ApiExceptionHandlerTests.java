@@ -1,5 +1,7 @@
 package com.soubhagya.flashreserve;
 
+import java.util.UUID;
+
 import com.soubhagya.flashreserve.dto.error.ApiError;
 import com.soubhagya.flashreserve.exception.ApiExceptionHandler;
 import com.soubhagya.flashreserve.exception.DuplicateEmailException;
@@ -14,6 +16,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 
 import org.springframework.mock.http.MockHttpInputMessage;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
 import org.springframework.security.authentication.BadCredentialsException;
 
@@ -47,6 +50,18 @@ class ApiExceptionHandlerTests {
 
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
 		assertThat(response.getBody().message()).isEqualTo("Email already registered");
+	}
+
+	@Test
+	void optimisticLockingConflictMapsTo409WithSafeMessage() {
+		ResponseEntity<ApiError> response = handler.handleOptimisticLocking(
+				new ObjectOptimisticLockingFailureException("Seat", UUID.randomUUID()), request);
+
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+		assertThat(response.getBody().message())
+				.isEqualTo("Resource was modified concurrently. Please retry.")
+				.doesNotContain("Hibernate")
+				.doesNotContain("StaleObject");
 	}
 
 	@Test

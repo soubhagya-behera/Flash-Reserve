@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -40,6 +41,12 @@ public class ApiExceptionHandler {
 	public ResponseEntity<ApiError> handleInvalidStateTransition(InvalidStateTransitionException ex,
 			HttpServletRequest request) {
 		return build(HttpStatus.CONFLICT, ex.getMessage(), request);
+	}
+
+	@ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+	public ResponseEntity<ApiError> handleOptimisticLocking(ObjectOptimisticLockingFailureException ex,
+			HttpServletRequest request) {
+		return build(HttpStatus.CONFLICT, "Resource was modified concurrently. Please retry.", request);
 	}
 
 	@ExceptionHandler(BadCredentialsException.class)
