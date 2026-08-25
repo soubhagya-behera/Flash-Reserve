@@ -69,36 +69,49 @@ class ReservationConcurrencyTests {
 
 	private final List<UUID> createdUserIds = new ArrayList<>();
 
-	private Event event;
-
-	private Seat seat;
+	private final List<UUID> createdEventIds = new ArrayList<>();
 
 	@AfterEach
 	void cleanDatabase() {
-		if (event != null) {
-			bookingRepository.findByEventId(event.getId()).forEach(bookingRepository::delete);
-			seatRepository.findByEventId(event.getId()).forEach(seatRepository::delete);
-			eventRepository.deleteById(event.getId());
+		for (UUID eventId : createdEventIds) {
+			bookingRepository.findByEventId(eventId).forEach(bookingRepository::delete);
+			seatRepository.findByEventId(eventId).forEach(seatRepository::delete);
+			eventRepository.deleteById(eventId);
 		}
+		createdEventIds.clear();
 		createdUserIds.forEach(userRepository::deleteById);
 		createdUserIds.clear();
 	}
 
-	@Test
-	void onlyOneConcurrentReservationWinsForTheSameSeat() throws Exception {
-		Event published = new Event("Concurrency Event", "d", "Hall",
-				Instant.now().plusSeconds(86_400), 1);
+	private Event newPublishedEvent(String name, int seatCount) {
+		Event published = new Event(name, "d", "Hall", Instant.now().plusSeconds(86_400), seatCount);
 		published.setStatus(EventStatus.PUBLISHED);
-		event = eventRepository.save(published);
-		seat = seatRepository.save(new Seat(event, "S001"));
+		Event saved = eventRepository.save(published);
+		createdEventIds.add(saved.getId());
+		List<Seat> seats = new ArrayList<>();
+		for (int i = 1; i <= seatCount; i++) {
+			seats.add(new Seat(saved, String.format("S%03d", i)));
+		}
+		seatRepository.saveAll(seats);
+		return saved;
+	}
 
+	private List<User> newUsers(int count) {
 		List<User> users = new ArrayList<>();
-		for (int i = 0; i < THREADS; i++) {
-			User user = userRepository.save(new User("Racer " + i, "racer" + i + "@example.test",
+		for (int i = 0; i < count; i++) {
+			User user = userRepository.save(new User("Racer " + i, "racer" + System.nanoTime() + "-" + i + "@example.test",
 					passwordEncoder.encode("password-123"), UserRole.USER));
 			users.add(user);
 			createdUserIds.add(user.getId());
 		}
+		return users;
+	}
+
+	@Test
+	void onlyOneConcurrentReservationWinsForTheSameSeat() throws Exception {
+		Event event = newPublishedEvent("Concurrency Event", 1);
+		Seat seat = seatRepository.findByEventIdAndStatus(event.getId(), SeatStatus.AVAILABLE).get(0);
+		List<User> users = newUsers(THREADS);
 
 		ExecutorService pool = Executors.newFixedThreadPool(THREADS);
 		CountDownLatch startGate = new CountDownLatch(1);
@@ -146,6 +159,56 @@ class ReservationConcurrencyTests {
 				.filter(booking -> booking.getStatus() == BookingStatus.PENDING)
 				.count();
 		assertThat(pendingBookings).as("exactly one active reservation - no oversell").isEqualTo(1);
+	}
+
+	@Test
+	void differentSeatsAreReservedConcurrentlyWithoutSerializingTheEvent() throws Exception {
+		Event event = newPublishedEvent("Parallel Seats Event", THREADS);
+		List<Seat> seats = seatRepository.findByEventIdAndStatus(event.getId(), SeatStatus.AVAILABLE);
+		List<User> users = newUsers(THREADS);
+
+		ExecutorService pool = Executors.newFixedThreadPool(THREADS);
+		CountDownLatch startGate = new CountDownLatch(1);
+		List<Future<Object>> results = new ArrayList<>();
+		for (int i = 0; i < THREADS; i++) {
+			User user = users.get(i);
+			Seat target = seats.get(i);
+			results.add(pool.submit((Callable<Object>) () -> {
+				startGate.await();
+				try {
+					return bookingService.reserve(user.getId(), event.getId(), target.getId());
+				}
+				catch (Throwable failure) {
+					return failure;
+				}
+			}));
+		}
+		startGate.countDown();
+		pool.shutdown();
+		assertThat(pool.awaitTermination(60, TimeUnit.SECONDS)).isTrue();
+
+		int successes = 0;
+		List<Object> failures = new ArrayList<>();
+		for (Future<Object> future : results) {
+			Object outcome = future.get();
+			if (outcome instanceof ReservationResponse) {
+				successes++;
+			}
+			else {
+				failures.add(outcome);
+			}
+		}
+
+		assertThat(failures).as("distinct seats must never contend on one lock").isEmpty();
+		assertThat(successes).as("every distinct seat is reservable concurrently").isEqualTo(THREADS);
+
+		assertThat(seatRepository.findByEventIdAndStatus(event.getId(), SeatStatus.HELD))
+				.as("all seats end HELD, each via its own lock")
+				.hasSize(THREADS);
+		long pendingBookings = bookingRepository.findByEventId(event.getId()).stream()
+				.filter(booking -> booking.getStatus() == BookingStatus.PENDING)
+				.count();
+		assertThat(pendingBookings).isEqualTo(THREADS);
 	}
 
 }

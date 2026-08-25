@@ -25,6 +25,7 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import lombok.RequiredArgsConstructor;
 
@@ -42,6 +43,10 @@ public class BookingService {
 
 	private final ReservationProperties reservationProperties;
 
+	private final ReservationLockService reservationLockService;
+
+	private final TransactionTemplate transactionTemplate;
+
 	public Booking getById(UUID id) {
 		return bookingRepository.findById(id)
 				.orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + id));
@@ -55,8 +60,21 @@ public class BookingService {
 		return bookingRepository.findByEventId(eventId);
 	}
 
-	@Transactional
+	/**
+	 * Reservation hot path. A per-seat Redis lock (eventId + seatId) absorbs
+	 * flash-sale contention before it reaches the database; inside the lock a
+	 * short PostgreSQL transaction performs the authoritative state change,
+	 * guarded by Seat {@code @Version} optimistic locking as the final
+	 * correctness mechanism. If Redis is unreachable the reservation fails
+	 * with a controlled 503 instead of pretending the distributed lock was
+	 * held.
+	 */
 	public ReservationResponse reserve(UUID userId, UUID eventId, UUID seatId) {
+		return reservationLockService.withSeatLock(eventId, seatId,
+				() -> transactionTemplate.execute(status -> doReserve(userId, eventId, seatId)));
+	}
+
+	private ReservationResponse doReserve(UUID userId, UUID eventId, UUID seatId) {
 		Event event = eventRepository.findById(eventId)
 				.filter(candidate -> candidate.getStatus() == EventStatus.PUBLISHED)
 				.orElseThrow(() -> new ResourceNotFoundException("Event not found: " + eventId));

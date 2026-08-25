@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import com.soubhagya.flashreserve.entity.User;
+import com.soubhagya.flashreserve.entity.enums.EventStatus;
 import com.soubhagya.flashreserve.entity.enums.SeatStatus;
 import com.soubhagya.flashreserve.entity.enums.UserRole;
 import com.soubhagya.flashreserve.repository.EventRepository;
@@ -30,6 +31,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
+import static org.hamcrest.Matchers.everyItem;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.is;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -266,6 +271,7 @@ class EventApiIntegrationTests {
 	@Test
 	void publicListingShowsOnlyPublishedEvents() throws Exception {
 		String token = adminToken();
+		long publishedBefore = publishedEventCount();
 		createEvent(token);
 		String publishedId = createEvent(token);
 
@@ -276,26 +282,34 @@ class EventApiIntegrationTests {
 		mockMvc.perform(get("/api/events"))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.content").isArray())
-				.andExpect(jsonPath("$.content.length()").value(1))
-				.andExpect(jsonPath("$.content[0].id").value(publishedId))
-				.andExpect(jsonPath("$.content[0].status").value("PUBLISHED"));
+				.andExpect(jsonPath("$.content.length()").value((int) publishedBefore + 1))
+				.andExpect(jsonPath("$.content[*].id", hasItem(publishedId)))
+				.andExpect(jsonPath("$.content[*].status", everyItem(is("PUBLISHED"))));
 	}
 
 	@Test
 	void publicListingSupportsPagination() throws Exception {
 		String token = adminToken();
+		long publishedBefore = publishedEventCount();
 		for (int i = 0; i < 3; i++) {
 			String id = createEvent(token);
 			mockMvc.perform(patch(ADMIN_EVENTS_URL + "/{id}/publish", id)
 							.header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
 					.andExpect(status().isOk());
 		}
+		long publishedTotal = publishedBefore + 3;
 
 		mockMvc.perform(get("/api/events").param("page", "0").param("size", "2"))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.content.length()").value(2))
-				.andExpect(jsonPath("$.page.totalElements").value(3))
-				.andExpect(jsonPath("$.page.totalPages").value(2));
+				.andExpect(jsonPath("$.page.totalElements").value(publishedTotal))
+				.andExpect(jsonPath("$.page.totalPages").value((publishedTotal + 1) / 2));
+	}
+
+	private long publishedEventCount() {
+		return eventRepository.findAll().stream()
+				.filter(event -> event.getStatus() == EventStatus.PUBLISHED)
+				.count();
 	}
 
 	@Test

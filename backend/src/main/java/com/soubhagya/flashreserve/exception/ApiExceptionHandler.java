@@ -49,6 +49,14 @@ public class ApiExceptionHandler {
 		return build(HttpStatus.CONFLICT, "Resource was modified concurrently. Please retry.", request);
 	}
 
+	@ExceptionHandler(ServiceUnavailableException.class)
+	public ResponseEntity<ApiError> handleServiceUnavailable(ServiceUnavailableException ex,
+			HttpServletRequest request) {
+		log.error("Reservation dependency unavailable while processing {} {}", request.getMethod(),
+				request.getRequestURI());
+		return build(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage(), request);
+	}
+
 	@ExceptionHandler(BadCredentialsException.class)
 	public ResponseEntity<ApiError> handleBadCredentials(BadCredentialsException ex, HttpServletRequest request) {
 		return build(HttpStatus.UNAUTHORIZED, ex.getMessage(), request);
