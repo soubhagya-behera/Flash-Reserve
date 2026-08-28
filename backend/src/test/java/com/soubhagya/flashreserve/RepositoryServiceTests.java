@@ -34,6 +34,8 @@ class RepositoryServiceTests {
 
 	private static final String UNKNOWN_EMAIL = "missing@example.test";
 
+	private static final PageRequest LARGE_PAGE = PageRequest.of(0, 10_000);
+
 	@Autowired
 	private UserRepository userRepository;
 
@@ -75,9 +77,12 @@ class RepositoryServiceTests {
 
 	@Test
 	void allDerivedQueryMethodsExecuteSuccessfully() {
+		long publishedBefore = eventRepository.findByStatus(EventStatus.PUBLISHED, LARGE_PAGE).getTotalElements();
+
 		assertThat(userRepository.existsByEmail(UNKNOWN_EMAIL)).isFalse();
 
-		assertThat(eventRepository.findByStatus(EventStatus.PUBLISHED, PageRequest.of(0, 10)).getContent()).isEmpty();
+		assertThat(eventRepository.findByStatus(EventStatus.PUBLISHED, LARGE_PAGE).getTotalElements())
+				.isEqualTo(publishedBefore);
 
 		assertThat(seatRepository.findByEventId(UNKNOWN_ID)).isEmpty();
 		assertThat(seatRepository.findByEventIdAndSeatNumber(UNKNOWN_ID, "A-1")).isEmpty();
@@ -95,8 +100,9 @@ class RepositoryServiceTests {
 
 	@Test
 	void servicesAreWiredAndCommunicateMissingEntities() {
+		long publishedBefore = eventService.getPublishedEvents(LARGE_PAGE).getTotalElements();
 		assertThat(userService.existsByEmail(UNKNOWN_EMAIL)).isFalse();
-		assertThat(eventService.getPublishedEvents(PageRequest.of(0, 10)).getContent()).isEmpty();
+		assertThat(eventService.getPublishedEvents(LARGE_PAGE).getTotalElements()).isEqualTo(publishedBefore);
 		assertThat(seatService.getSeatsForEvent(UNKNOWN_ID)).isEmpty();
 		assertThat(seatService.getSeatsForEvent(UNKNOWN_ID, SeatStatus.AVAILABLE)).isEmpty();
 		assertThat(seatService.getAvailableSeats(UNKNOWN_ID)).isEmpty();

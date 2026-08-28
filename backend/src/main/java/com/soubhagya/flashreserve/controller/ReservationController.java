@@ -5,6 +5,7 @@ import java.util.UUID;
 import com.soubhagya.flashreserve.dto.booking.ReservationResponse;
 import com.soubhagya.flashreserve.security.UserPrincipal;
 import com.soubhagya.flashreserve.service.BookingService;
+import com.soubhagya.flashreserve.service.RateLimitService;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,9 +26,12 @@ public class ReservationController {
 
 	private final BookingService bookingService;
 
+	private final RateLimitService rateLimitService;
+
 	@PostMapping
 	ResponseEntity<ReservationResponse> reserve(@AuthenticationPrincipal UserPrincipal principal,
 			@PathVariable UUID eventId, @PathVariable UUID seatId) {
+		rateLimitService.checkReservationLimit(principal.id());
 		ReservationResponse response = bookingService.reserve(principal.id(), eventId, seatId);
 		return ResponseEntity.status(HttpStatus.CREATED).body(response);
 	}

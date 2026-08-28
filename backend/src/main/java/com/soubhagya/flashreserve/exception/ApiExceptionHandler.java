@@ -10,6 +10,7 @@ import com.soubhagya.flashreserve.dto.error.ApiError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -55,6 +56,14 @@ public class ApiExceptionHandler {
 		log.error("Reservation dependency unavailable while processing {} {}", request.getMethod(),
 				request.getRequestURI());
 		return build(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage(), request);
+	}
+
+	@ExceptionHandler(RateLimitExceededException.class)
+	public ResponseEntity<ApiError> handleRateLimitExceeded(RateLimitExceededException ex,
+			HttpServletRequest request) {
+		return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+				.header(HttpHeaders.RETRY_AFTER, Long.toString(ex.retryAfterSeconds()))
+				.body(ApiError.of(HttpStatus.TOO_MANY_REQUESTS, ex.getMessage(), request.getRequestURI()));
 	}
 
 	@ExceptionHandler(BadCredentialsException.class)

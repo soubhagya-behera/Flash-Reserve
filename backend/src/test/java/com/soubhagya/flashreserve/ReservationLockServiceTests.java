@@ -43,8 +43,9 @@ class ReservationLockServiceTests {
 	void setUp() {
 		redisson = Mockito.mock(RedissonClient.class);
 		lock = Mockito.mock(RLock.class);
-		lockService = new ReservationLockService(redisson,
-				new ReservationProperties(Duration.ofMinutes(5), Duration.ofSeconds(30), Duration.ofSeconds(2)));
+		lockService = new ReservationLockService(redisson, new ReservationProperties(Duration.ofMinutes(5),
+				Duration.ofSeconds(30), Duration.ofSeconds(2),
+				new ReservationProperties.RateLimit(10, Duration.ofSeconds(1))));
 	}
 
 	@Test
