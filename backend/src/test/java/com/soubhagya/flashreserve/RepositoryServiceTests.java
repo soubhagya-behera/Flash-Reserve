@@ -106,7 +106,7 @@ class RepositoryServiceTests {
 		assertThat(seatService.getSeatsForEvent(UNKNOWN_ID)).isEmpty();
 		assertThat(seatService.getSeatsForEvent(UNKNOWN_ID, SeatStatus.AVAILABLE)).isEmpty();
 		assertThat(seatService.getAvailableSeats(UNKNOWN_ID)).isEmpty();
-		assertThat(bookingService.getBookingsByUser(UNKNOWN_ID)).isEmpty();
+		assertThat(bookingService.getBookingsByUser(UNKNOWN_ID, PageRequest.of(0, 10)).getContent()).isEmpty();
 		assertThat(bookingService.getBookingsByEvent(UNKNOWN_ID)).isEmpty();
 		assertThat(paymentService.findByBookingId(UNKNOWN_ID)).isEmpty();
 

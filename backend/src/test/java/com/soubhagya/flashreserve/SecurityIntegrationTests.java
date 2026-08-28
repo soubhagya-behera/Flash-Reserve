@@ -230,7 +230,7 @@ class SecurityIntegrationTests {
 
 		mockMvc.perform(get(FUTURE_PROTECTED_PATH)
 						.header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
-				.andExpect(status().isNotFound());
+				.andExpect(status().isOk());
 
 		mockMvc.perform(get("/api/events")
 						.header(HttpHeaders.AUTHORIZATION, "Bearer " + token))

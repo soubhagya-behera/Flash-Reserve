@@ -20,6 +20,8 @@ import com.soubhagya.flashreserve.repository.EventRepository;
 import com.soubhagya.flashreserve.repository.SeatRepository;
 import com.soubhagya.flashreserve.repository.UserRepository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
 import org.springframework.stereotype.Service;
@@ -54,12 +56,48 @@ public class BookingService {
 				.orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + id));
 	}
 
-	public List<Booking> getBookingsByUser(UUID userId) {
-		return bookingRepository.findByUserId(userId);
+	@Transactional(readOnly = true)
+	public Page<Booking> getBookingsByUser(UUID userId, Pageable pageable) {
+		return bookingRepository.findByUserId(userId, pageable);
 	}
 
 	public List<Booking> getBookingsByEvent(UUID eventId) {
 		return bookingRepository.findByEventId(eventId);
+	}
+
+	/**
+	 * A booking is only ever reachable by its owner. Missing and foreign
+	 * bookings resolve to the same 404 so the existence of another user's
+	 * booking is never revealed.
+	 */
+	@Transactional(readOnly = true)
+	public Booking getOwnedBooking(UUID bookingId, UUID userId) {
+		return bookingRepository.findByIdAndUserId(bookingId, userId)
+				.orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + bookingId));
+	}
+
+	/**
+	 * Cancels a PENDING booking and releases its seat (HELD -> AVAILABLE) in
+	 * one transaction. Non-cancellable states are rejected with a conflict.
+	 * Seat {@code @Version} optimistic locking arbitrates against a concurrent
+	 * expiration: only one of the two writers can change the seat, so the
+	 * loser rolls back and the booking/seat pair stays consistent.
+	 */
+	@Transactional
+	public Booking cancelBooking(UUID bookingId, UUID userId) {
+		Booking booking = getOwnedBooking(bookingId, userId);
+		if (booking.getStatus() != BookingStatus.PENDING) {
+			throw new InvalidStateTransitionException(
+					"Cannot cancel booking in status " + booking.getStatus());
+		}
+		Seat seat = booking.getSeat();
+		if (seat.getStatus() != SeatStatus.HELD) {
+			throw new InvalidStateTransitionException("Seat is not held and cannot be released");
+		}
+		seat.setStatus(SeatStatus.AVAILABLE);
+		seatRepository.saveAndFlush(seat);
+		booking.setStatus(BookingStatus.CANCELLED);
+		return booking;
 	}
 
 	/**
