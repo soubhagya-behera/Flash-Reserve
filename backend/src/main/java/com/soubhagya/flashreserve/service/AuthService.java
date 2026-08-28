@@ -9,6 +9,7 @@ import com.soubhagya.flashreserve.entity.enums.UserRole;
 import com.soubhagya.flashreserve.exception.DuplicateEmailException;
 import com.soubhagya.flashreserve.security.JwtService;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -26,13 +27,25 @@ public class AuthService {
 
 	private final JwtService jwtService;
 
+	/**
+	 * The {@code uk_users_email} unique constraint is the final race-safe
+	 * protection: two concurrent registrations can both pass the pre-check,
+	 * but only one insert can win. The loser surfaces as an expected 409
+	 * {@link DuplicateEmailException}, never a 500.
+	 */
 	public AuthResponse register(RegisterRequest request) {
 		if (userService.existsByEmail(request.email())) {
 			throw new DuplicateEmailException("Email already registered");
 		}
 		String encodedPassword = passwordEncoder.encode(request.password());
-		User user = userService.createUser(request.name(), request.email(), encodedPassword, UserRole.USER);
-		return buildAuthResponse(user);
+		try {
+			User user = userService.createUser(request.name(), request.email(),
+					encodedPassword, UserRole.USER);
+			return buildAuthResponse(user);
+		}
+		catch (DataIntegrityViolationException ex) {
+			throw new DuplicateEmailException("Email already registered");
+		}
 	}
 
 	public AuthResponse login(LoginRequest request) {

@@ -3,6 +3,7 @@ package com.soubhagya.flashreserve;
 import java.time.Duration;
 import java.util.UUID;
 
+import com.soubhagya.flashreserve.config.AuthProperties;
 import com.soubhagya.flashreserve.config.ReservationProperties;
 import com.soubhagya.flashreserve.exception.RateLimitExceededException;
 import com.soubhagya.flashreserve.exception.ServiceUnavailableException;
@@ -35,6 +36,8 @@ class RateLimitServiceTests {
 
 	private static final UUID USER_ID = UUID.fromString("33333333-3333-3333-3333-333333333333");
 
+	private static final String CLIENT_IP = "203.0.113.7";
+
 	private RedissonClient redisson;
 
 	private RRateLimiter limiter;
@@ -46,9 +49,12 @@ class RateLimitServiceTests {
 		redisson = mock(RedissonClient.class);
 		limiter = mock(RRateLimiter.class);
 		when(redisson.getRateLimiter(anyString())).thenReturn(limiter);
-		rateLimitService = new RateLimitService(redisson, new ReservationProperties(
-				Duration.ofMinutes(5), Duration.ofSeconds(30), Duration.ofSeconds(2),
-				new ReservationProperties.RateLimit(3, Duration.ofSeconds(5))));
+		rateLimitService = new RateLimitService(redisson,
+				new ReservationProperties(Duration.ofMinutes(5), Duration.ofSeconds(30),
+						Duration.ofSeconds(2), new ReservationProperties.RateLimit(3, Duration.ofSeconds(5))),
+				new AuthProperties(
+						new AuthProperties.RateLimit(20, Duration.ofMinutes(1)),
+						new AuthProperties.RateLimit(10, Duration.ofMinutes(1))));
 	}
 
 	@Test
@@ -126,6 +132,52 @@ class RateLimitServiceTests {
 				.isInstanceOf(ServiceUnavailableException.class)
 				.hasMessageNotContaining("Redis")
 				.hasMessageNotContaining("Redisson");
+	}
+
+	@Test
+	void loginLimitIsKeyedByClientIpInsideItsOwnScope() {
+		when(limiter.tryAcquire()).thenReturn(true);
+
+		rateLimitService.checkLoginLimit(CLIENT_IP);
+
+		verify(redisson).getRateLimiter("flashreserve:ratelimit:login:ip:" + CLIENT_IP);
+		verify(limiter).trySetRate(RateType.OVERALL, 20L, Duration.ofMinutes(1));
+	}
+
+	@Test
+	void registrationLimitIsKeyedByClientIpInsideItsOwnScope() {
+		when(limiter.tryAcquire()).thenReturn(true);
+
+		rateLimitService.checkRegistrationLimit(CLIENT_IP);
+
+		verify(redisson).getRateLimiter("flashreserve:ratelimit:registration:ip:" + CLIENT_IP);
+		verify(limiter).trySetRate(RateType.OVERALL, 10L, Duration.ofMinutes(1));
+	}
+
+	@Test
+	void authScopesUseIndependentBucketsForTheSameClientIp() {
+		when(limiter.tryAcquire()).thenReturn(true);
+
+		rateLimitService.checkLoginLimit(CLIENT_IP);
+		rateLimitService.checkRegistrationLimit(CLIENT_IP);
+
+		verify(redisson).getRateLimiter("flashreserve:ratelimit:login:ip:" + CLIENT_IP);
+		verify(redisson).getRateLimiter("flashreserve:ratelimit:registration:ip:" + CLIENT_IP);
+	}
+
+	@Test
+	void authLimitRejectionIsSafeAndCarriesTheRetryHint() {
+		when(limiter.tryAcquire()).thenReturn(false);
+
+		assertThatThrownBy(() -> rateLimitService.checkLoginLimit(CLIENT_IP))
+				.isInstanceOfSatisfying(RateLimitExceededException.class, ex -> {
+					assertThat(ex.retryAfterSeconds()).isEqualTo(60);
+					assertThat(ex.getMessage())
+							.isEqualTo("Too many authentication attempts. Please try again shortly.")
+							.doesNotContain("Redis")
+							.doesNotContain("password")
+							.doesNotContain("token");
+				});
 	}
 
 }

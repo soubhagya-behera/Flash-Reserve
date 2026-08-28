@@ -2,6 +2,7 @@ package com.soubhagya.flashreserve.dto.event;
 
 import java.time.Instant;
 
+import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -22,6 +23,7 @@ public record CreateEventRequest(
 		String venue,
 
 		@NotNull(message = "Event date is required")
+		@Future(message = "Event date must be in the future")
 		Instant eventDate,
 
 		@Positive(message = "Total seats must be positive")

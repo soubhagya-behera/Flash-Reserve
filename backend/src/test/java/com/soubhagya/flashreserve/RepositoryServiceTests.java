@@ -92,7 +92,7 @@ class RepositoryServiceTests {
 		assertThat(bookingRepository.findByEventId(UNKNOWN_ID)).isEmpty();
 		assertThat(bookingRepository.findBySeatId(UNKNOWN_ID)).isEmpty();
 		assertThat(bookingRepository.findByStatus(BookingStatus.PENDING)).isEmpty();
-		assertThat(bookingRepository.findByStatusAndExpiresAtBefore(BookingStatus.PENDING, Instant.now())).isEmpty();
+		assertThat(bookingRepository.findDueHoldIds(BookingStatus.PENDING, Instant.now())).isEmpty();
 
 		assertThat(paymentRepository.findByBookingId(UNKNOWN_ID)).isEmpty();
 		assertThat(paymentRepository.findByPaymentReference("missing-reference")).isEmpty();

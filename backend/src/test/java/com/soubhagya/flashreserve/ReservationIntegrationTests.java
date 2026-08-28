@@ -18,6 +18,7 @@ import com.soubhagya.flashreserve.repository.SeatRepository;
 import com.soubhagya.flashreserve.repository.UserRepository;
 import com.soubhagya.flashreserve.security.JwtService;
 import com.soubhagya.flashreserve.service.BookingService;
+import com.soubhagya.flashreserve.service.HoldExpirationService;
 
 import org.junit.jupiter.api.Test;
 
@@ -73,6 +74,9 @@ class ReservationIntegrationTests {
 
 	@Autowired
 	private BookingService bookingService;
+
+	@Autowired
+	private HoldExpirationService holdExpirationService;
 
 	private User newUser(String email) {
 		return userRepository.save(new User("User", email,
@@ -328,6 +332,55 @@ class ReservationIntegrationTests {
 		var secondReservation = bookingService.reserve(second.getId(), event.getId(), seat.getId());
 		assertThat(secondReservation.status()).isEqualTo(BookingStatus.PENDING);
 		assertThat(seatRepository.findById(seat.getId()).orElseThrow().getStatus()).isEqualTo(SeatStatus.HELD);
+	}
+
+	@Test
+	void bookedSeatIsNeverExpiredOrReleasedByExpiration() {
+		User user = newUser("booked-expiry@example.test");
+		Event event = publishedEvent();
+		Seat seat = seatRepository.findByEventIdAndSeatNumber(event.getId(), "S001").orElseThrow();
+
+		bookingService.reserve(user.getId(), event.getId(), seat.getId());
+		var booking = bookingRepository.findBySeatId(seat.getId()).stream().findFirst().orElseThrow();
+		booking.setExpiresAt(Instant.now().minusSeconds(1));
+		bookingRepository.saveAndFlush(booking);
+
+		// Simulates a completed payment: the sale advanced the seat past HELD.
+		seat.setStatus(SeatStatus.BOOKED);
+		seatRepository.saveAndFlush(seat);
+
+		assertThat(bookingService.expireIfDue(booking.getId())).isFalse();
+		assertThat(seatRepository.findById(seat.getId()).orElseThrow().getStatus())
+				.as("a BOOKED seat must never be released back to AVAILABLE by expiration")
+				.isEqualTo(SeatStatus.BOOKED);
+		assertThat(bookingRepository.findById(booking.getId()).orElseThrow().getStatus())
+				.as("the booking of a sold seat must not be expired by the hold job")
+				.isEqualTo(BookingStatus.PENDING);
+	}
+
+	@Test
+	void expirationJobReleasesDueHoldsAndKeepsActiveOnes() {
+		User user = newUser("job-expiry@example.test");
+		Event event = publishedEvent();
+		Seat dueSeat = seatRepository.findByEventIdAndSeatNumber(event.getId(), "S001").orElseThrow();
+		Seat activeSeat = seatRepository.findByEventIdAndSeatNumber(event.getId(), "S002").orElseThrow();
+
+		bookingService.reserve(user.getId(), event.getId(), dueSeat.getId());
+		bookingService.reserve(user.getId(), event.getId(), activeSeat.getId());
+
+		var dueBooking = bookingRepository.findBySeatId(dueSeat.getId()).stream().findFirst().orElseThrow();
+		dueBooking.setExpiresAt(Instant.now().minusSeconds(1));
+		bookingRepository.saveAndFlush(dueBooking);
+
+		holdExpirationService.expireDueHolds();
+
+		assertThat(seatRepository.findById(dueSeat.getId()).orElseThrow().getStatus())
+				.isEqualTo(SeatStatus.AVAILABLE);
+		assertThat(bookingRepository.findById(dueBooking.getId()).orElseThrow().getStatus())
+				.isEqualTo(BookingStatus.EXPIRED);
+		assertThat(seatRepository.findById(activeSeat.getId()).orElseThrow().getStatus())
+				.as("a hold that is not yet due must survive the expiration job")
+				.isEqualTo(SeatStatus.HELD);
 	}
 
 }

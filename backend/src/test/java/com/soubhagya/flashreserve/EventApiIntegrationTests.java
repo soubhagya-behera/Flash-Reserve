@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+import com.soubhagya.flashreserve.entity.Event;
 import com.soubhagya.flashreserve.entity.User;
 import com.soubhagya.flashreserve.entity.enums.EventStatus;
 import com.soubhagya.flashreserve.entity.enums.SeatStatus;
@@ -171,6 +172,66 @@ class EventApiIntegrationTests {
 				.andExpect(jsonPath("$.fieldErrors.venue").exists())
 				.andExpect(jsonPath("$.fieldErrors.eventDate").exists())
 				.andExpect(jsonPath("$.fieldErrors.totalSeats").exists());
+	}
+
+	@Test
+	void createRejectsPastEventDate() throws Exception {
+		String token = adminToken();
+
+		String past = """
+				{"name":"Past Event","description":"d","venue":"Hall",
+				 "eventDate":"2020-01-01T18:00:00Z","totalSeats":5}""";
+		mockMvc.perform(post(ADMIN_EVENTS_URL)
+						.header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(past))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.fieldErrors.eventDate")
+						.value("Event date must be in the future"));
+	}
+
+	@Test
+	void updateCannotMoveEventDateIntoThePast() throws Exception {
+		String token = adminToken();
+		String eventId = createEvent(token);
+
+		String movedToPast = """
+				{"name":"Spring Concert","description":"Open air concert","venue":"City Arena",
+				 "eventDate":"2020-01-01T18:00:00Z"}""";
+		mockMvc.perform(put(ADMIN_EVENTS_URL + "/{id}", eventId)
+						.header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(movedToPast))
+				.andExpect(status().isConflict())
+				.andExpect(jsonPath("$.message").value("Event date cannot be moved into the past"));
+
+		// Keeping the unchanged future date is still a valid update.
+		String sameFutureDate = """
+				{"name":"Renamed Concert","description":"Open air concert","venue":"City Arena",
+				 "eventDate":"2027-06-01T18:00:00Z"}""";
+		mockMvc.perform(put(ADMIN_EVENTS_URL + "/{id}", eventId)
+						.header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(sameFutureDate))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.name").value("Renamed Concert"));
+	}
+
+	@Test
+	void existingPastEventStaysEditableWithoutMovingItsDate() throws Exception {
+		String token = adminToken();
+		Event legacy = eventRepository.save(new Event("Legacy Event", "d", "Old Hall",
+				Instant.now().minusSeconds(86_400), 5));
+
+		String body = """
+				{"name":"Legacy Event Renamed","description":"d","venue":"New Hall",
+				 "eventDate":"%s"}""".formatted(legacy.getEventDate());
+		mockMvc.perform(put(ADMIN_EVENTS_URL + "/{id}", legacy.getId())
+						.header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(body))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.name").value("Legacy Event Renamed"));
 	}
 
 	@Test

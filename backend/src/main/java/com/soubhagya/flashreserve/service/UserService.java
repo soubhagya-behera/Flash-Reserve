@@ -37,7 +37,10 @@ public class UserService {
 	}
 
 	public User createUser(String name, String email, String encodedPassword, UserRole role) {
-		return userRepository.save(new User(name, email, encodedPassword, role));
+		// Flush inside the repository call so a uk_users_email violation under
+		// concurrent registration surfaces here as a translated
+		// DataIntegrityViolationException (-> 409), not at commit time.
+		return userRepository.saveAndFlush(new User(name, email, encodedPassword, role));
 	}
 
 }

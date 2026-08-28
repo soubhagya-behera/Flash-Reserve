@@ -1,5 +1,6 @@
 package com.soubhagya.flashreserve.service;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -67,6 +68,12 @@ public class EventService {
 	@Transactional
 	public EventResponse update(UUID id, UpdateEventRequest request) {
 		Event event = getById(id);
+		// Editing an existing event (which may legitimately be in the past) is
+		// allowed; only MOVING the date into the past is rejected.
+		if (!request.eventDate().equals(event.getEventDate())
+				&& request.eventDate().isBefore(Instant.now())) {
+			throw new InvalidStateTransitionException("Event date cannot be moved into the past");
+		}
 		event.setName(request.name());
 		event.setDescription(request.description());
 		event.setVenue(request.venue());

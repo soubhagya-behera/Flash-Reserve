@@ -4,7 +4,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-import com.soubhagya.flashreserve.entity.Booking;
 import com.soubhagya.flashreserve.entity.enums.BookingStatus;
 import com.soubhagya.flashreserve.repository.BookingRepository;
 
@@ -27,11 +26,7 @@ public class HoldExpirationService {
 
 	@Scheduled(fixedDelayString = "${reservation.expiration-interval}")
 	public void expireDueHolds() {
-		List<UUID> dueIds = bookingRepository
-				.findByStatusAndExpiresAtBefore(BookingStatus.PENDING, Instant.now())
-				.stream()
-				.map(Booking::getId)
-				.toList();
+		List<UUID> dueIds = bookingRepository.findDueHoldIds(BookingStatus.PENDING, Instant.now());
 		for (UUID id : dueIds) {
 			try {
 				bookingService.expireIfDue(id);

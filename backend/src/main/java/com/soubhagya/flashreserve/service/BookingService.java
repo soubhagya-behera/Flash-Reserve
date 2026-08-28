@@ -28,7 +28,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class BookingService {
@@ -108,6 +110,10 @@ public class BookingService {
 	 * concurrently, the optimistic lock fails and BOTH changes roll back;
 	 * the caller retries on the next pass with fresh state, so a newer seat
 	 * state is never silently overwritten.
+	 *
+	 * A seat that already advanced past HELD (BOOKED by a completed payment)
+	 * is never released and its booking is never expired here: the sale owns
+	 * the seat, so the hold must survive until the payment flow settles it.
 	 */
 	@Transactional
 	public boolean expireIfDue(UUID bookingId) {
@@ -116,6 +122,11 @@ public class BookingService {
 			return false;
 		}
 		Seat seat = booking.getSeat();
+		if (seat.getStatus() == SeatStatus.BOOKED) {
+			log.warn("Booking {} is due but its seat is already BOOKED; the hold is not released",
+					bookingId);
+			return false;
+		}
 		if (seat.getStatus() == SeatStatus.HELD) {
 			seat.setStatus(SeatStatus.AVAILABLE);
 			seatRepository.saveAndFlush(seat);
