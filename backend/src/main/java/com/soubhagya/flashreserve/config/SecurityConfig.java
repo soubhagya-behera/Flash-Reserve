@@ -48,6 +48,10 @@ public class SecurityConfig {
 						.requestMatchers(HttpMethod.POST, "/api/bookings/*/cancel").hasRole("USER")
 						.requestMatchers(HttpMethod.POST, "/api/bookings/*/payment",
 								"/api/bookings/*/payment/verify").hasRole("USER")
+						.requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
+						.permitAll()
+						.requestMatchers(HttpMethod.GET, "/actuator/health", "/actuator/health/**")
+						.permitAll()
 						.requestMatchers("/error").permitAll()
 						.requestMatchers("/api/admin/**").hasRole("ADMIN")
 						.requestMatchers("/api/**").authenticated()
