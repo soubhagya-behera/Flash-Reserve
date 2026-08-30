@@ -2,7 +2,7 @@
 
 A high-throughput **flash-sale and ticket reservation backend** built with Spring Boot. It solves the classic flash-sale problem - many concurrent users racing for a small number of seats - without overselling, using a layered combination of Redis distributed locking, PostgreSQL optimistic locking, and distributed rate limiting.
 
-**Status:** backend feature-complete for the core booking lifecycle, with Razorpay **TEST MODE** payments integrated. There is no frontend, no production payment processing, and no cloud deployment yet (see [Project status](#project-status)).
+**Status:** backend feature-complete for the core booking lifecycle, with Razorpay **TEST MODE** payments integrated. The React + Vite frontend foundation was initialized but has no pages yet. There is no production payment processing and no cloud deployment yet (see [Project status](#project-status)).
 
 ---
 
@@ -188,6 +188,18 @@ cd backend
 ```
 
 The suite (integration + concurrency + unit) currently contains **133 tests**, all passing. Tests require a reachable PostgreSQL and Redis instance; unit-only tests run without them.
+
+## Running the frontend
+
+The React + Vite client (JavaScript, no TypeScript) lives in `frontend/`. It currently provides only the app foundation; pages are built in later commits.
+
+```bash
+cd frontend
+npm install
+npm run dev            # starts the Vite dev server on http://localhost:5173
+```
+
+The backend runs separately on <http://localhost:8080>. The API base URL is configured in `frontend/.env` (copy `frontend/.env.example`; VITE_* values are public and must never contain secrets).
 
 ## API documentation
 
