@@ -1,7 +1,9 @@
 package com.soubhagya.flashreserve.dto.event;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -20,6 +22,10 @@ public record UpdateEventRequest(
 		String venue,
 
 		@NotNull(message = "Event date is required")
-		Instant eventDate) {
+		Instant eventDate,
+
+		@NotNull(message = "Ticket price is required")
+		@DecimalMin(value = "0.01", message = "Ticket price must be positive")
+		BigDecimal ticketPrice) {
 
 }

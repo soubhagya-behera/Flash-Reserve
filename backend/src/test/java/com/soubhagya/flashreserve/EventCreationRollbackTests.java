@@ -81,7 +81,7 @@ class EventCreationRollbackTests {
 						.contentType(MediaType.APPLICATION_JSON)
 						.content("""
 								{"name":"Rollback Event","description":"d","venue":"Hall",
-								 "eventDate":"2027-06-01T18:00:00Z","totalSeats":10}"""))
+								 "eventDate":"2027-06-01T18:00:00Z","totalSeats":10,"ticketPrice":20.00}"""))
 				.andExpect(status().isInternalServerError())
 				.andExpect(jsonPath("$.message").value("Unexpected internal error"))
 				.andExpect(jsonPath("$.status").value(500));

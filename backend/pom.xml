@@ -65,6 +65,13 @@
 			<scope>runtime</scope>
 		</dependency>
 
+		<!-- Official Razorpay Java SDK for TEST MODE payment integration. -->
+		<dependency>
+			<groupId>com.razorpay</groupId>
+			<artifactId>razorpay-java</artifactId>
+			<version>1.4.10</version>
+		</dependency>
+
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>

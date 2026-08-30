@@ -58,6 +58,22 @@ public class Payment {
 	@Column(name = "payment_reference", length = 100)
 	private String paymentReference;
 
+	/**
+	 * The provider (Razorpay) order id created for this payment. Verified on
+	 * confirmation so a submitted order id that does not belong to this exact
+	 * local payment is rejected. Distinct from the local Payment id.
+	 */
+	@Column(name = "razorpay_order_id", length = 64)
+	private String razorpayOrderId;
+
+	/**
+	 * The provider (Razorpay) payment id returned after a successful payment.
+	 * Set only on confirmation. Never used for lookups; the local database id
+	 * and payment reference remain the source of truth.
+	 */
+	@Column(name = "razorpay_payment_id", length = 64)
+	private String razorpayPaymentId;
+
 	@CreationTimestamp
 	@Column(name = "created_at", nullable = false, updatable = false)
 	@Setter(AccessLevel.NONE)
@@ -75,6 +91,18 @@ public class Payment {
 
 	public void setStatus(PaymentStatus status) {
 		this.status = status;
+	}
+
+	public void setPaymentReference(String paymentReference) {
+		this.paymentReference = paymentReference;
+	}
+
+	public void setRazorpayOrderId(String razorpayOrderId) {
+		this.razorpayOrderId = razorpayOrderId;
+	}
+
+	public void setRazorpayPaymentId(String razorpayPaymentId) {
+		this.razorpayPaymentId = razorpayPaymentId;
 	}
 
 }

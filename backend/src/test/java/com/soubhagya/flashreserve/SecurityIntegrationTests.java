@@ -71,7 +71,7 @@ class SecurityIntegrationTests {
 	private JwtService jwtService;
 
 	private static final String ADMIN_CREATE_BODY = """
-			{"name":"Sample Event","description":"d","venue":"Hall A","eventDate":"2027-01-01T18:00:00Z","totalSeats":5}""";
+			{"name":"Sample Event","description":"d","venue":"Hall A","eventDate":"2027-01-01T18:00:00Z","totalSeats":5,"ticketPrice":250.00}""";
 
 	private String registerBody(String email) {
 		return """

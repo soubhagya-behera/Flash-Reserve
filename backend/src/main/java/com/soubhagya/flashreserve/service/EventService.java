@@ -54,6 +54,7 @@ public class EventService {
 	public EventResponse create(CreateEventRequest request) {
 		Event event = new Event(request.name(), request.description(), request.venue(),
 				request.eventDate(), request.totalSeats());
+		event.setTicketPrice(request.ticketPrice());
 		event = eventRepository.saveAndFlush(event);
 
 		List<Seat> seats = new ArrayList<>(request.totalSeats());
@@ -78,6 +79,7 @@ public class EventService {
 		event.setDescription(request.description());
 		event.setVenue(request.venue());
 		event.setEventDate(request.eventDate());
+		event.setTicketPrice(request.ticketPrice());
 		return EventResponse.from(event);
 	}
 

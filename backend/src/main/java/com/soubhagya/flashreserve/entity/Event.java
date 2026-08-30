@@ -1,5 +1,6 @@
 package com.soubhagya.flashreserve.entity;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -57,6 +58,16 @@ public class Event {
 	@Positive
 	@Column(name = "total_seats", nullable = false)
 	private int totalSeats;
+
+	/**
+	 * Per-ticket sale price in the base currency unit (e.g. rupees). The
+	 * server derives the payment amount exclusively from this value, so a
+	 * client can never set how much it pays. Enforced as required at the
+	 * create/update API boundary; kept nullable at the column level so
+	 * pre-existing rows and direct-entity tests continue to work.
+	 */
+	@Column(name = "ticket_price", precision = 10, scale = 2)
+	private BigDecimal ticketPrice;
 
 	@NotNull
 	@Enumerated(EnumType.STRING)

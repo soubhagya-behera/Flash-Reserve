@@ -1,7 +1,9 @@
 package com.soubhagya.flashreserve.dto.event;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
@@ -28,6 +30,10 @@ public record CreateEventRequest(
 
 		@Positive(message = "Total seats must be positive")
 		@Max(value = 10000, message = "Total seats must not exceed 10000")
-		int totalSeats) {
+		int totalSeats,
+
+		@NotNull(message = "Ticket price is required")
+		@DecimalMin(value = "0.01", message = "Ticket price must be positive")
+		BigDecimal ticketPrice) {
 
 }

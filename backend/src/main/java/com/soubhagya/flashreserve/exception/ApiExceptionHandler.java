@@ -44,6 +44,12 @@ public class ApiExceptionHandler {
 		return build(HttpStatus.CONFLICT, ex.getMessage(), request);
 	}
 
+	@ExceptionHandler(PaymentVerificationException.class)
+	public ResponseEntity<ApiError> handlePaymentVerification(PaymentVerificationException ex,
+			HttpServletRequest request) {
+		return build(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
+	}
+
 	@ExceptionHandler(ObjectOptimisticLockingFailureException.class)
 	public ResponseEntity<ApiError> handleOptimisticLocking(ObjectOptimisticLockingFailureException ex,
 			HttpServletRequest request) {

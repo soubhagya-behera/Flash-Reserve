@@ -58,7 +58,7 @@ class EventApiIntegrationTests {
 
 	private static final String CREATE_BODY = """
 			{"name":"Spring Concert","description":"Open air concert","venue":"City Arena",
-			 "eventDate":"2027-06-01T18:00:00Z","totalSeats":25}""";
+			 "eventDate":"2027-06-01T18:00:00Z","totalSeats":25,"ticketPrice":499.00}""";
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -180,7 +180,7 @@ class EventApiIntegrationTests {
 
 		String past = """
 				{"name":"Past Event","description":"d","venue":"Hall",
-				 "eventDate":"2020-01-01T18:00:00Z","totalSeats":5}""";
+				 "eventDate":"2020-01-01T18:00:00Z","totalSeats":5,"ticketPrice":10.00}""";
 		mockMvc.perform(post(ADMIN_EVENTS_URL)
 						.header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
 						.contentType(MediaType.APPLICATION_JSON)
@@ -197,7 +197,7 @@ class EventApiIntegrationTests {
 
 		String movedToPast = """
 				{"name":"Spring Concert","description":"Open air concert","venue":"City Arena",
-				 "eventDate":"2020-01-01T18:00:00Z"}""";
+				 "eventDate":"2020-01-01T18:00:00Z","ticketPrice":499.00}""";
 		mockMvc.perform(put(ADMIN_EVENTS_URL + "/{id}", eventId)
 						.header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
 						.contentType(MediaType.APPLICATION_JSON)
@@ -208,7 +208,7 @@ class EventApiIntegrationTests {
 		// Keeping the unchanged future date is still a valid update.
 		String sameFutureDate = """
 				{"name":"Renamed Concert","description":"Open air concert","venue":"City Arena",
-				 "eventDate":"2027-06-01T18:00:00Z"}""";
+				 "eventDate":"2027-06-01T18:00:00Z","ticketPrice":499.00}""";
 		mockMvc.perform(put(ADMIN_EVENTS_URL + "/{id}", eventId)
 						.header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
 						.contentType(MediaType.APPLICATION_JSON)
@@ -225,7 +225,7 @@ class EventApiIntegrationTests {
 
 		String body = """
 				{"name":"Legacy Event Renamed","description":"d","venue":"New Hall",
-				 "eventDate":"%s"}""".formatted(legacy.getEventDate());
+				 "eventDate":"%s","ticketPrice":499.00}""".formatted(legacy.getEventDate());
 		mockMvc.perform(put(ADMIN_EVENTS_URL + "/{id}", legacy.getId())
 						.header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
 						.contentType(MediaType.APPLICATION_JSON)
@@ -300,7 +300,7 @@ class EventApiIntegrationTests {
 
 		String updateBody = """
 				{"name":"Renamed Event","description":"Updated","venue":"New Hall",
-				 "eventDate":"2027-07-02T20:00:00Z","totalSeats":999}""";
+				 "eventDate":"2027-07-02T20:00:00Z","totalSeats":999,"ticketPrice":399.50}""";
 		mockMvc.perform(put(ADMIN_EVENTS_URL + "/{id}", eventId)
 						.header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
 						.contentType(MediaType.APPLICATION_JSON)
