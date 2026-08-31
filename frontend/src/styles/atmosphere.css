@@ -1,0 +1,64 @@
+/* ============================================================
+   FlashReserve — Atmospheric background foundation
+   Mount .fr-atmosphere once near the app root. It is purely
+   decorative (aria-hidden) and never captures pointer events.
+   ============================================================ */
+
+.fr-atmosphere {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  /* A quiet vertical wash: lavender light above, warm blush below. */
+  background: linear-gradient(
+    180deg,
+    var(--fr-surface-soft),
+    var(--fr-bg) 45%,
+    #fdf4f9
+  );
+}
+
+/* Soft glow orbs — large blurred radial gradients, CSS only. */
+.fr-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+}
+
+.fr-orb--violet {
+  width: 42vmax;
+  height: 42vmax;
+  top: -18vmax;
+  left: -12vmax;
+  background: var(--fr-gradient-glow-primary);
+}
+
+.fr-orb--pink {
+  width: 38vmax;
+  height: 38vmax;
+  top: -10vmax;
+  right: -14vmax;
+  background: var(--fr-gradient-glow-accent);
+}
+
+.fr-orb--blue {
+  width: 34vmax;
+  height: 34vmax;
+  bottom: -16vmax;
+  left: 30%;
+  background: var(--fr-gradient-glow-info);
+}
+
+@media (max-width: 48rem) {
+  /* Dampen orb sizes on small screens so text areas stay calm. */
+  .fr-orb--violet {
+    width: 60vmax;
+    height: 60vmax;
+  }
+
+  .fr-orb--pink,
+  .fr-orb--blue {
+    opacity: 0.6;
+  }
+}

@@ -1,0 +1,60 @@
+/* ============================================================
+   FlashReserve — Semantic typography levels
+   display → heading → subheading → body → small → caption
+   ============================================================ */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--fr-font-display);
+  font-weight: 500;
+  line-height: var(--fr-leading-heading);
+  color: var(--fr-text);
+}
+
+/* Largest editorial moments — one or two per page at most. */
+.fr-display {
+  font-size: var(--fr-text-display);
+  letter-spacing: -0.02em;
+}
+
+/* Section and page titles. */
+.fr-heading {
+  font-size: var(--fr-text-h1);
+  letter-spacing: -0.01em;
+}
+
+/* Supporting titles — interface-weighted rather than editorial. */
+.fr-subheading {
+  font-family: var(--fr-font-body);
+  font-size: var(--fr-text-h3);
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--fr-text-soft);
+}
+
+.fr-body {
+  font-size: var(--fr-text-md);
+  color: var(--fr-text);
+}
+
+.fr-small {
+  font-size: var(--fr-text-sm);
+  color: var(--fr-text-soft);
+}
+
+.fr-caption {
+  font-size: var(--fr-text-xs);
+  color: var(--fr-text-muted);
+}
+
+/* Brand-tinted text for short emphasized spans. */
+.fr-text-gradient {
+  background-image: var(--fr-gradient-brand);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}

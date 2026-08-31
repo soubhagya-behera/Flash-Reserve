@@ -1,0 +1,83 @@
+/* ============================================================
+   FlashReserve — Surfaces, layout containers, brand primitive
+   Hierarchy: background → surface → elevated → glass.
+   ============================================================ */
+
+/* --- Layout containers ------------------------------------- */
+
+.fr-container {
+  width: 100%;
+  max-width: var(--fr-container);
+  margin-inline: auto;
+  padding-inline: var(--fr-container-pad);
+}
+
+.fr-section {
+  padding-block: var(--fr-section);
+}
+
+.fr-measure {
+  max-width: var(--fr-measure);
+}
+
+/* --- Surface hierarchy -------------------------------------- */
+
+.fr-surface,
+.fr-surface-soft,
+.fr-surface-elevated,
+.fr-surface-glass {
+  border: 1px solid var(--fr-border);
+  border-radius: var(--fr-radius-lg);
+}
+
+/* Resting cards and panels. */
+.fr-surface {
+  background: var(--fr-surface);
+  box-shadow: var(--fr-shadow-sm);
+}
+
+/* Tinted, quieter sections of a page. */
+.fr-surface-soft {
+  background: var(--fr-surface-soft);
+}
+
+/* Cards that carry the primary action of a view. */
+.fr-surface-elevated {
+  background: var(--fr-surface-elevated);
+  box-shadow: var(--fr-shadow-md);
+}
+
+/* Reserved for overlays and floating panels — use sparingly. */
+.fr-surface-glass {
+  background: rgba(255, 255, 255, 0.62);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: var(--fr-shadow-sm);
+}
+
+/* Atmospheric variant for immersive bands (hero, empty states). */
+.fr-surface-gradient {
+  background-image: var(--fr-gradient-surface);
+  border: 1px solid var(--fr-border);
+  border-radius: var(--fr-radius-lg);
+}
+
+/* Brand gradient fill for chips, marks and small emphasis. */
+.fr-gradient-brand {
+  background-image: var(--fr-gradient-brand);
+}
+
+/* --- Brand monogram ----------------------------------------- */
+
+.fr-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: var(--fr-radius-md);
+  color: var(--fr-ink-on-brand);
+  font-family: var(--fr-font-display);
+  font-size: 1.375rem;
+  font-weight: 600;
+  box-shadow: var(--fr-shadow-glow);
+}

@@ -1,0 +1,130 @@
+/* ============================================================
+   FlashReserve — Design Tokens
+   Single source of truth for color, type, spacing, radius,
+   shadow and motion. Components consume these variables instead
+   of inventing raw values.
+   ============================================================ */
+
+:root {
+  /* --- 1. Neutral surfaces: warm porcelain with a violet cast.
+         Never pure white, never pure black. --- */
+  --fr-bg: #faf8fc;
+  --fr-surface: #ffffff;
+  --fr-surface-soft: #f3effa;
+  --fr-surface-elevated: #ffffff;
+
+  /* --- 2. Text: deep plum ink --- */
+  --fr-text: #2b1c42;
+  --fr-text-soft: #544570;
+  --fr-text-muted: #7a6d92;
+
+  /* --- 3. Brand spectrum --- */
+  --fr-primary: #7a5af8;        /* iris violet */
+  --fr-primary-strong: #6244e0; /* AA-safe on light surfaces */
+  --fr-primary-soft: #ede8fd;
+  --fr-accent: #d9539e;         /* aurora magenta */
+  --fr-accent-soft: #fbe7f2;
+  --fr-info: #5b8def;           /* dusk blue, used sparingly */
+
+  /* --- 4. Semantic feedback --- */
+  --fr-success: #1f8f6b;
+  --fr-success-soft: #ddf3ea;
+  --fr-warning: #a3680a;
+  --fr-warning-soft: #fbeed3;
+  --fr-danger: #cf3d5e;
+  --fr-danger-soft: #fbe1e6;
+
+  /* --- 5. Ink used on top of brand gradient fills --- */
+  --fr-ink-on-brand: #ffffff;
+
+  /* --- 6. Atmospheric glow stops (referenced by orbs/gradients) --- */
+  --fr-glow-primary: rgba(122, 90, 248, 0.28);
+  --fr-glow-accent: rgba(217, 83, 158, 0.24);
+  --fr-glow-info: rgba(91, 141, 239, 0.22);
+
+  /* --- 7. Borders --- */
+  --fr-border: #e7e1f2;
+  --fr-border-strong: #d4cbe8;
+
+  /* --- 8. Gradients (kept small and reusable) --- */
+  --fr-gradient-brand: linear-gradient(
+    120deg,
+    var(--fr-accent),
+    var(--fr-primary) 55%,
+    var(--fr-info)
+  );
+  --fr-gradient-surface: linear-gradient(165deg, #f6f2fd, #fdf3f8);
+  --fr-gradient-glow-primary: radial-gradient(
+    closest-side,
+    var(--fr-glow-primary),
+    transparent
+  );
+  --fr-gradient-glow-accent: radial-gradient(
+    closest-side,
+    var(--fr-glow-accent),
+    transparent
+  );
+  --fr-gradient-glow-info: radial-gradient(
+    closest-side,
+    var(--fr-glow-info),
+    transparent
+  );
+
+  /* --- 9. Shadows: plum-tinted, never heavy black --- */
+  --fr-shadow-sm:
+    0 1px 2px rgba(43, 28, 66, 0.06),
+    0 2px 10px rgba(43, 28, 66, 0.05);
+  --fr-shadow-md: 0 10px 30px -12px rgba(43, 28, 66, 0.16);
+  --fr-shadow-lg: 0 24px 56px -20px rgba(43, 28, 66, 0.22);
+  --fr-shadow-glow: 0 10px 32px -10px rgba(122, 90, 248, 0.4);
+
+  /* --- 10. Radius --- */
+  --fr-radius-sm: 8px;
+  --fr-radius-md: 14px;
+  --fr-radius-lg: 22px;
+  --fr-radius-full: 999px;
+
+  /* --- 11. Spacing scale (fluid at the large end) --- */
+  --fr-space-2xs: 0.25rem;
+  --fr-space-xs: 0.5rem;
+  --fr-space-sm: 0.75rem;
+  --fr-space-md: 1.25rem;
+  --fr-space-lg: 2rem;
+  --fr-space-xl: 3rem;
+  --fr-section: clamp(4rem, 9vw, 7rem);      /* between page sections */
+  --fr-gap-card: clamp(1rem, 2.5vw, 1.5rem); /* gaps inside card grids */
+
+  /* --- 12. Layout containers --- */
+  --fr-container: 72rem;
+  --fr-container-pad: clamp(1.25rem, 5vw, 2.5rem);
+  --fr-measure: 42rem; /* comfortable prose line length */
+
+  /* --- 13. Typography: system stacks, editorial serif for display --- */
+  --fr-font-display:
+    'Charter', 'Iowan Old Style', 'Palatino Linotype',
+    'Book Antiqua', Georgia, serif;
+  --fr-font-body:
+    system-ui, -apple-system, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+
+  --fr-text-xs: 0.75rem;
+  --fr-text-sm: 0.875rem;
+  --fr-text-md: 1rem;
+  --fr-text-lg: clamp(1.0625rem, 1.5vw, 1.1875rem);
+  --fr-text-h3: clamp(1.125rem, 2vw, 1.375rem);
+  --fr-text-h2: clamp(1.375rem, 3vw, 1.875rem);
+  --fr-text-h1: clamp(1.875rem, 4.5vw, 2.75rem);
+  --fr-text-display: clamp(2.5rem, 6.5vw, 4rem);
+
+  --fr-leading: 1.65;
+  --fr-leading-heading: 1.15;
+  --fr-tracking-caps: 0.12em;
+
+  /* --- 14. Motion --- */
+  --fr-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --fr-dur-fast: 160ms;
+  --fr-dur: 280ms;
+  --fr-dur-slow: 640ms;
+
+  color-scheme: light;
+}

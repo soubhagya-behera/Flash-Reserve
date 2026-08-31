@@ -1,0 +1,83 @@
+/* ============================================================
+   FlashReserve — Base reset + document defaults
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+body {
+  margin: 0;
+  min-height: 100svh;
+  font-family: var(--fr-font-body);
+  font-size: var(--fr-text-md);
+  line-height: var(--fr-leading);
+  color: var(--fr-text);
+  background-color: var(--fr-bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+figure,
+blockquote {
+  margin: 0;
+}
+
+ul,
+ol {
+  margin: 0;
+  padding: 0;
+}
+
+img,
+svg,
+video {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  color: var(--fr-primary-strong);
+  text-underline-offset: 0.2em;
+}
+
+a:hover {
+  color: var(--fr-primary);
+}
+
+::selection {
+  background: var(--fr-primary-soft);
+  color: var(--fr-text);
+}
+
+:focus-visible {
+  outline: 2px solid var(--fr-primary);
+  outline-offset: 2px;
+}
