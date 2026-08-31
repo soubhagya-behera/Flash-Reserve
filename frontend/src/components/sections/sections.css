@@ -1,0 +1,185 @@
+/* ============================================================
+   FlashReserve — Shared section shell + capability strip +
+   how-it-works steps.
+   ============================================================ */
+
+/* --- Section header pattern ----------------------------------- */
+
+.section-head {
+  max-width: 38rem;
+  margin-bottom: clamp(2.5rem, 5vw, 4rem);
+}
+
+.section-head--center {
+  margin-inline: auto;
+  text-align: center;
+}
+
+.section-eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: var(--fr-tracking-caps);
+  text-transform: uppercase;
+  color: var(--fr-accent);
+}
+
+.section-title {
+  margin-top: var(--fr-space-sm);
+}
+
+.section-lede {
+  margin-top: var(--fr-space-sm);
+  color: var(--fr-text-soft);
+}
+
+/* --- Capability strip ------------------------------------------ */
+
+.cap {
+  border-block: 1px solid var(--fr-border);
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.cap__list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.cap__item {
+  display: grid;
+  gap: 0.35rem;
+  padding: var(--fr-space-lg) var(--fr-space-md);
+  border-left: 1px solid var(--fr-border);
+}
+
+.cap__item:first-child {
+  border-left: 0;
+}
+
+.cap__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--fr-font-body);
+  font-size: var(--fr-text-sm);
+  font-weight: 700;
+  color: var(--fr-text);
+}
+
+.cap__tick {
+  display: inline-grid;
+  place-items: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: var(--fr-radius-full);
+  background: var(--fr-primary-soft);
+  color: var(--fr-primary-strong);
+  font-size: 0.625rem;
+  flex-shrink: 0;
+}
+
+.cap__detail {
+  font-size: var(--fr-text-xs);
+  color: var(--fr-text-muted);
+}
+
+/* --- How it works ----------------------------------------------- */
+
+.steps {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--fr-gap-card);
+}
+
+.step {
+  position: relative;
+  display: grid;
+  gap: 0.6rem;
+  align-content: start;
+  padding: var(--fr-space-lg) var(--fr-space-md);
+  border: 1px solid var(--fr-border);
+  border-radius: var(--fr-radius-lg);
+  background: var(--fr-surface);
+  box-shadow: var(--fr-shadow-sm);
+  transition:
+    transform var(--fr-dur) var(--fr-ease),
+    box-shadow var(--fr-dur) var(--fr-ease);
+}
+
+.step:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--fr-shadow-md);
+}
+
+.step__number {
+  font-family: var(--fr-font-display);
+  font-size: 1.75rem;
+  font-weight: 500;
+  background-image: var(--fr-gradient-brand);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.step__title {
+  font-size: var(--fr-text-h3);
+}
+
+.step__detail {
+  font-size: var(--fr-text-sm);
+  color: var(--fr-text-soft);
+}
+
+/* A quiet rail behind the steps on wide screens. */
+.steps::before {
+  content: '';
+  position: absolute;
+  top: 3.4rem;
+  left: 6%;
+  right: 6%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--fr-border-strong), transparent);
+}
+
+/* --- Responsive ------------------------------------------------ */
+
+@media (max-width: 64rem) {
+  .cap__list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cap__item:nth-child(odd) {
+    border-left: 0;
+  }
+
+  .cap__item:nth-child(n + 3) {
+    border-top: 1px solid var(--fr-border);
+  }
+
+  .steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .steps::before {
+    display: none;
+  }
+}
+
+@media (max-width: 40rem) {
+  .cap__list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .cap__item {
+    border-left: 0;
+    padding-block: var(--fr-space-md);
+  }
+
+  .cap__item:nth-child(n + 2) {
+    border-top: 1px solid var(--fr-border);
+  }
+
+  .steps {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

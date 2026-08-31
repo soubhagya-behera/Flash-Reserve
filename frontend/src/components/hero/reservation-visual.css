@@ -1,0 +1,319 @@
+/* ============================================================
+   FlashReserve — Hero reservation visual
+   Layered composition: glow → back stub → ticket → confirmation
+   stub → floating status cards. Decorative throughout.
+   ============================================================ */
+
+.rv {
+  position: relative;
+}
+
+.rv__stage {
+  position: relative;
+  max-width: 30rem;
+  margin-inline: auto;
+  padding: 1.75rem 1.25rem 2.25rem;
+}
+
+/* Atmospheric glow behind the whole composition. */
+.rv__glow {
+  position: absolute;
+  inset: -8% -12%;
+  background:
+    var(--fr-gradient-glow-accent) 85% 8% / 55% 55% no-repeat,
+    var(--fr-gradient-glow-primary) 12% 90% / 60% 60% no-repeat;
+  pointer-events: none;
+}
+
+/* --- Ticket stubs ------------------------------------------- */
+
+.rv__stub {
+  border-radius: var(--fr-radius-lg);
+}
+
+.rv__stub--back {
+  position: absolute;
+  inset: 2.25rem -1.25rem auto auto;
+  width: 55%;
+  height: 62%;
+  background-image: var(--fr-gradient-brand);
+  opacity: 0.16;
+  transform: rotate(7deg);
+}
+
+.rv__stub--front {
+  position: absolute;
+  bottom: 0;
+  left: -1.5rem;
+  z-index: 3;
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.9rem 1.1rem;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--fr-border);
+  box-shadow: var(--fr-shadow-lg);
+  transform: rotate(-4deg);
+}
+
+.rv__stub-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: var(--fr-text-xs);
+  font-weight: 700;
+  letter-spacing: var(--fr-tracking-caps);
+  text-transform: uppercase;
+  color: var(--fr-success);
+}
+
+.rv__stub-check {
+  display: inline-grid;
+  place-items: center;
+  width: 1rem;
+  height: 1rem;
+  border-radius: var(--fr-radius-full);
+  background: var(--fr-success);
+  color: var(--fr-ink-on-brand);
+  font-size: 0.625rem;
+}
+
+.rv__stub-seat {
+  font-family: var(--fr-font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--fr-text);
+}
+
+.rv__stub-ref {
+  font-size: var(--fr-text-xs);
+  color: var(--fr-text-muted);
+}
+
+/* --- Main ticket --------------------------------------------- */
+
+.rv__ticket {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: 0.9rem;
+  padding: 1.4rem;
+  border-radius: var(--fr-radius-lg);
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--fr-border);
+  box-shadow: var(--fr-shadow-lg);
+}
+
+.rv__ticket-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--fr-space-sm);
+}
+
+.rv__eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: var(--fr-tracking-caps);
+  text-transform: uppercase;
+  color: var(--fr-text-muted);
+}
+
+.rv__event {
+  font-family: var(--fr-font-display);
+  font-size: 1.375rem;
+  font-weight: 600;
+  color: var(--fr-text);
+}
+
+.rv__meta {
+  font-size: var(--fr-text-xs);
+  color: var(--fr-text-soft);
+}
+
+.rv__live {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: var(--fr-radius-full);
+  background: var(--fr-accent-soft);
+  color: var(--fr-accent);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.rv__live-dot {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: var(--fr-radius-full);
+  background: var(--fr-accent);
+}
+
+/* --- Seat map ------------------------------------------------- */
+
+.rv__ticket-body {
+  padding-top: 0.9rem;
+  border-top: 1px dashed var(--fr-border-strong);
+}
+
+.rv__map-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: var(--fr-tracking-caps);
+  text-transform: uppercase;
+  color: var(--fr-text-muted);
+  margin-bottom: 0.6rem;
+}
+
+.rv__map {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.rv__row {
+  display: grid;
+  grid-template-columns: 1rem 1fr;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.rv__row-label {
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: var(--fr-text-muted);
+}
+
+.rv__dots {
+  display: flex;
+  gap: 0.55rem;
+}
+
+.rv__seat {
+  width: 0.95rem;
+  height: 0.95rem;
+  border-radius: 0.3rem;
+}
+
+.rv__seat--available {
+  background: var(--fr-primary);
+  opacity: 0.75;
+}
+
+.rv__seat--selected {
+  background: var(--fr-accent);
+  box-shadow: 0 0 0 3px var(--fr-accent-soft);
+}
+
+.rv__seat--taken {
+  background: var(--fr-border-strong);
+  opacity: 0.7;
+}
+
+/* --- Ticket footer ------------------------------------------- */
+
+.rv__ticket-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--fr-space-sm);
+  flex-wrap: wrap;
+}
+
+.rv__legend {
+  display: flex;
+  gap: 0.8rem;
+  list-style: none;
+  flex-wrap: wrap;
+}
+
+.rv__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.6875rem;
+  color: var(--fr-text-muted);
+}
+
+.rv__legend-item .rv__seat {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 0.2rem;
+}
+
+.rv__availability {
+  font-size: var(--fr-text-xs);
+  font-weight: 700;
+  color: var(--fr-primary-strong);
+}
+
+/* --- Floating status cards ------------------------------------ */
+
+.rv__float {
+  position: absolute;
+  z-index: 4;
+}
+
+.rv__float--confirmed {
+  top: 2%;
+  right: -1.25rem;
+}
+
+.rv__float--seat {
+  top: 46%;
+  left: -2rem;
+}
+
+.rv__float--hold {
+  bottom: 4%;
+  right: -0.75rem;
+  animation-delay: -4s;
+}
+
+/* --- Responsive ------------------------------------------------ */
+
+@media (max-width: 64rem) {
+  .rv__float--seat {
+    left: -0.75rem;
+  }
+
+  .rv__float--confirmed {
+    right: -0.5rem;
+  }
+}
+
+@media (max-width: 48rem) {
+  .rv__stage {
+    max-width: 22rem;
+    padding: 1rem 0.5rem 1.5rem;
+  }
+
+  .rv__float--seat {
+    top: 38%;
+    left: -0.5rem;
+  }
+
+  .rv__float--hold {
+    bottom: 1%;
+    right: 0;
+  }
+
+  .rv__stub--front {
+    left: -0.25rem;
+    padding: 0.7rem 0.85rem;
+  }
+
+  .rv__dots {
+    gap: 0.4rem;
+  }
+
+  .rv__seat {
+    width: 0.85rem;
+    height: 0.85rem;
+  }
+}

@@ -1,0 +1,39 @@
+/* ============================================================
+   FlashReserve — Floating status cards (hero decoration)
+   ============================================================ */
+
+.fsc {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid var(--fr-border);
+  border-radius: var(--fr-radius-md);
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: var(--fr-shadow-md);
+  font-size: var(--fr-text-xs);
+  font-weight: 600;
+  color: var(--fr-text-soft);
+  white-space: nowrap;
+}
+
+.fsc__mark {
+  display: inline-grid;
+  place-items: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: var(--fr-radius-full);
+  font-size: 0.625rem;
+  line-height: 1;
+  color: var(--fr-ink-on-brand);
+  background-image: var(--fr-gradient-brand);
+}
+
+@media (max-width: 48rem) {
+  .fsc {
+    padding: 0.4rem 0.7rem;
+    font-size: 0.6875rem;
+  }
+}

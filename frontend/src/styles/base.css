@@ -77,6 +77,29 @@ a:hover {
   color: var(--fr-text);
 }
 
+/* Keyboard skip link — hidden until focused. */
+.skip-link {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 100;
+  padding: 0.55rem 1rem;
+  border-radius: var(--fr-radius-full);
+  background: var(--fr-surface);
+  border: 1px solid var(--fr-border-strong);
+  box-shadow: var(--fr-shadow-md);
+  font-size: var(--fr-text-sm);
+  font-weight: 600;
+  text-decoration: none;
+  /* Kept off-screen (not display:none) so focus lands predictably. */
+  transform: translateY(-300%);
+  transition: transform var(--fr-dur-fast) var(--fr-ease);
+}
+
+.skip-link:focus-visible {
+  transform: none;
+}
+
 :focus-visible {
   outline: 2px solid var(--fr-primary);
   outline-offset: 2px;

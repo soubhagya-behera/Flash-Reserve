@@ -1,4 +1,4 @@
-import './App.css'
+import LandingPage from './pages/LandingPage.jsx'
 
 function App() {
   return (
@@ -9,18 +9,11 @@ function App() {
         <span className="fr-orb fr-orb--blue fr-anim-float" />
       </div>
 
-      <main className="app-shell">
-        <div className="app-welcome fr-anim-fade-up">
-          <span className="fr-mark fr-gradient-brand" aria-hidden="true">
-            F
-          </span>
-          <h1 className="fr-display">FlashReserve</h1>
-          <p className="fr-subheading">
-            Visual foundation in place — pages and features arrive in upcoming
-            commits.
-          </p>
-        </div>
-      </main>
+      <a className="skip-link" href="#main">
+        Skip to main content
+      </a>
+
+      <LandingPage />
     </>
   )
 }

@@ -1,0 +1,152 @@
+/* ============================================================
+   FlashReserve — Feature showcase + final CTA
+   ============================================================ */
+
+.features__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--fr-gap-card);
+}
+
+.feature {
+  display: grid;
+  gap: 0.55rem;
+  align-content: start;
+  padding: var(--fr-space-lg) var(--fr-space-md);
+  border: 1px solid var(--fr-border);
+  border-radius: var(--fr-radius-lg);
+  background: var(--fr-surface);
+  box-shadow: var(--fr-shadow-sm);
+  transition:
+    transform var(--fr-dur) var(--fr-ease),
+    box-shadow var(--fr-dur) var(--fr-ease);
+}
+
+.feature:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--fr-shadow-md);
+}
+
+.feature__title {
+  font-size: 1.0625rem;
+  color: var(--fr-text);
+}
+
+.feature__detail {
+  font-size: var(--fr-text-sm);
+  color: var(--fr-text-soft);
+}
+
+/* --- Spotlight card ------------------------------------------ */
+
+.feature--spotlight {
+  grid-column: span 2;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  align-items: center;
+  gap: var(--fr-space-md);
+  background-image: var(--fr-gradient-surface);
+}
+
+.feature__title {
+  position: relative;
+}
+
+/* Mini seat-map scene inside the spotlight card. */
+.feature__scene {
+  display: grid;
+  justify-items: center;
+  gap: 0.7rem;
+  padding: var(--fr-space-md);
+  border: 1px solid var(--fr-border);
+  border-radius: var(--fr-radius-md);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.feature__mini-map {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.feature__mini-seat {
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 0.35rem;
+  background: var(--fr-primary-soft);
+}
+
+.feature__mini-seat--locked {
+  background-image: var(--fr-gradient-brand);
+  box-shadow: var(--fr-shadow-glow);
+}
+
+.feature__lock-chip {
+  padding: 0.3rem 0.7rem;
+  border-radius: var(--fr-radius-full);
+  background: var(--fr-surface);
+  border: 1px solid var(--fr-border-strong);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--fr-primary-strong);
+}
+
+/* --- Final CTA -------------------------------------------------- */
+
+.cta__panel {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  justify-items: center;
+  gap: var(--fr-space-md);
+  padding: clamp(3rem, 7vw, 5.5rem) var(--fr-space-md);
+  border-radius: calc(var(--fr-radius-lg) * 1.5);
+  text-align: center;
+}
+
+.cta__glow {
+  position: absolute;
+  inset: 0;
+  background:
+    var(--fr-gradient-glow-accent) 8% 0% / 50% 70% no-repeat,
+    var(--fr-gradient-glow-primary) 92% 100% / 55% 75% no-repeat;
+  pointer-events: none;
+}
+
+.cta__title {
+  max-width: 30rem;
+  font-size: clamp(1.75rem, 4.5vw, 2.75rem);
+}
+
+.cta__tagline {
+  font-family: var(--fr-font-display);
+  font-size: var(--fr-text-h3);
+  color: var(--fr-text-soft);
+}
+
+.cta__panel .fr-btn {
+  margin-top: var(--fr-space-xs);
+}
+
+/* --- Responsive ------------------------------------------------ */
+
+@media (max-width: 64rem) {
+  .features__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .feature--spotlight {
+    grid-column: span 2;
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 40rem) {
+  .features__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .feature--spotlight {
+    grid-column: auto;
+  }
+}

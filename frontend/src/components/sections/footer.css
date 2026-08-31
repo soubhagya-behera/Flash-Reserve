@@ -1,0 +1,75 @@
+/* ============================================================
+   FlashReserve — Footer
+   ============================================================ */
+
+.footer {
+  border-top: 1px solid var(--fr-border);
+  background: rgba(255, 255, 255, 0.55);
+  padding-block: var(--fr-space-xl) var(--fr-space-lg);
+}
+
+.footer__inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: var(--fr-space-lg);
+}
+
+.footer__wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-family: var(--fr-font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--fr-text);
+}
+
+.footer__wordmark .fr-mark {
+  width: 2rem;
+  height: 2rem;
+  font-size: 1rem;
+  border-radius: var(--fr-radius-sm);
+}
+
+.footer__description {
+  max-width: 22rem;
+  margin-top: var(--fr-space-sm);
+  font-size: var(--fr-text-sm);
+  color: var(--fr-text-soft);
+}
+
+.footer__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(1rem, 3vw, 2rem);
+  list-style: none;
+  justify-content: flex-end;
+  align-items: flex-start;
+}
+
+.footer__links a {
+  font-size: var(--fr-text-sm);
+  color: var(--fr-text-soft);
+  text-decoration: none;
+  transition: color var(--fr-dur-fast) var(--fr-ease);
+}
+
+.footer__links a:hover {
+  color: var(--fr-primary-strong);
+}
+
+.footer__note {
+  grid-column: 1 / -1;
+  padding-top: var(--fr-space-md);
+  border-top: 1px solid var(--fr-border);
+}
+
+@media (max-width: 48rem) {
+  .footer__inner {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .footer__links {
+    justify-content: flex-start;
+  }
+}

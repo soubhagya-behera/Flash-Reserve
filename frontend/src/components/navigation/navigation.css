@@ -1,0 +1,156 @@
+/* ============================================================
+   FlashReserve — Navigation
+   Frosted bar on desktop; a simple disclosed panel on mobile.
+   ============================================================ */
+
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--fr-border);
+}
+
+.nav__inner {
+  display: flex;
+  align-items: center;
+  gap: var(--fr-space-md);
+  min-height: 4.25rem;
+}
+
+.nav__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  text-decoration: none;
+  color: var(--fr-text);
+}
+
+.nav__brand .fr-mark {
+  width: 2.25rem;
+  height: 2.25rem;
+  font-size: 1.15rem;
+  border-radius: var(--fr-radius-sm);
+}
+
+.nav__wordmark {
+  font-family: var(--fr-font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.nav__menu {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--fr-space-md);
+}
+
+.nav__links {
+  display: flex;
+  align-items: center;
+  gap: clamp(1rem, 2.5vw, 1.75rem);
+  list-style: none;
+}
+
+.nav__links a {
+  font-size: var(--fr-text-sm);
+  font-weight: 500;
+  color: var(--fr-text-soft);
+  text-decoration: none;
+  transition: color var(--fr-dur-fast) var(--fr-ease);
+}
+
+.nav__links a:hover {
+  color: var(--fr-primary-strong);
+}
+
+.nav__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--fr-space-xs);
+}
+
+/* --- Mobile toggle (hidden on desktop) ---------------------- */
+
+.nav__toggle {
+  display: none;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.9rem;
+  margin-left: auto;
+  border: 1px solid var(--fr-border-strong);
+  border-radius: var(--fr-radius-full);
+  background: var(--fr-surface);
+  color: var(--fr-text-soft);
+  font-size: var(--fr-text-sm);
+  font-weight: 600;
+}
+
+.nav__toggle-box {
+  display: grid;
+  gap: 4px;
+}
+
+.nav__toggle-bar {
+  width: 16px;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+}
+
+@media (max-width: 52rem) {
+  .nav__toggle {
+    display: inline-flex;
+  }
+
+  .nav__menu {
+    display: none;
+  }
+
+  .nav__menu--open {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    display: grid;
+    gap: var(--fr-space-md);
+    padding: var(--fr-space-md) var(--fr-container-pad) var(--fr-space-lg);
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--fr-border);
+    box-shadow: var(--fr-shadow-md);
+  }
+
+  .nav__menu--open .nav__links {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.25rem;
+  }
+
+  .nav__menu--open .nav__links a {
+    display: block;
+    padding: 0.65rem 0.75rem;
+    border-radius: var(--fr-radius-sm);
+    font-size: var(--fr-text-md);
+  }
+
+  .nav__menu--open .nav__links a:hover {
+    background: var(--fr-surface-soft);
+  }
+
+  .nav__menu--open .nav__actions {
+    grid-auto-flow: row;
+    display: grid;
+    gap: var(--fr-space-xs);
+  }
+
+  .nav__menu--open .nav__actions .fr-btn {
+    width: 100%;
+  }
+}

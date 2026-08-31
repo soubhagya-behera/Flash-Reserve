@@ -1,0 +1,113 @@
+/* ============================================================
+   FlashReserve — Hero
+   Asymmetric split: editorial copy on the left, the floating
+   reservation composition on the right.
+   ============================================================ */
+
+.hero {
+  position: relative;
+  padding-block: clamp(3.5rem, 8vw, 6.5rem) clamp(3rem, 7vw, 5.5rem);
+  overflow: hidden;
+}
+
+.hero__inner {
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  align-items: center;
+  gap: clamp(2.5rem, 6vw, 5rem);
+}
+
+/* --- Copy ------------------------------------------------------ */
+
+.hero__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.4rem 0.95rem;
+  border: 1px solid var(--fr-border);
+  border-radius: var(--fr-radius-full);
+  background: rgba(255, 255, 255, 0.66);
+  box-shadow: var(--fr-shadow-sm);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: var(--fr-tracking-caps);
+  text-transform: uppercase;
+  color: var(--fr-text-soft);
+}
+
+.hero__eyebrow-dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: var(--fr-radius-full);
+  background: var(--fr-accent);
+}
+
+.hero__title {
+  margin-top: var(--fr-space-md);
+  font-size: clamp(2.75rem, 7.5vw, 4.5rem);
+}
+
+.hero__lead {
+  max-width: 30rem;
+  margin-top: var(--fr-space-md);
+  font-size: var(--fr-text-lg);
+  color: var(--fr-text-soft);
+}
+
+.hero__cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--fr-space-sm);
+  margin-top: var(--fr-space-lg);
+}
+
+/* The reservation story in miniature: EVENT → SEAT → … */
+.hero__flow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: var(--fr-space-xl);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: var(--fr-tracking-caps);
+  text-transform: uppercase;
+  color: var(--fr-text-muted);
+}
+
+.hero__flow-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.hero__flow-arrow {
+  color: var(--fr-primary);
+}
+
+/* --- Responsive ------------------------------------------------ */
+
+@media (max-width: 64rem) {
+  .hero__inner {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .hero__visual {
+    margin-top: var(--fr-space-md);
+  }
+}
+
+@media (max-width: 48rem) {
+  .hero {
+    padding-block: 2.75rem 3rem;
+  }
+
+  .hero__cta .fr-btn {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+
+  .hero__flow {
+    margin-top: var(--fr-space-lg);
+  }
+}

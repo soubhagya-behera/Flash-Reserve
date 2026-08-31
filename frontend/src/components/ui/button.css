@@ -1,0 +1,58 @@
+/* ============================================================
+   FlashReserve — Button primitive
+   Two variants: brand gradient (primary) and quiet surface (ghost).
+   ============================================================ */
+
+.fr-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.4rem;
+  border: 1px solid transparent;
+  border-radius: var(--fr-radius-full);
+  font-family: var(--fr-font-body);
+  font-size: var(--fr-text-sm);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  transition:
+    transform var(--fr-dur-fast) var(--fr-ease),
+    box-shadow var(--fr-dur-fast) var(--fr-ease),
+    background-color var(--fr-dur-fast) var(--fr-ease),
+    border-color var(--fr-dur-fast) var(--fr-ease);
+}
+
+.fr-btn:focus-visible {
+  outline-offset: 3px;
+}
+
+.fr-btn--primary {
+  background-image: var(--fr-gradient-brand);
+  color: var(--fr-ink-on-brand);
+  box-shadow: var(--fr-shadow-glow);
+}
+
+.fr-btn--primary:hover {
+  transform: translateY(-1px);
+  filter: saturate(1.08);
+  box-shadow: var(--fr-shadow-glow);
+}
+
+.fr-btn--ghost {
+  background-color: var(--fr-surface);
+  border-color: var(--fr-border-strong);
+  color: var(--fr-text-soft);
+  box-shadow: var(--fr-shadow-sm);
+}
+
+.fr-btn--ghost:hover {
+  border-color: var(--fr-primary);
+  color: var(--fr-primary-strong);
+  transform: translateY(-1px);
+}
+
+/* Compact variant for the navigation bar. */
+.fr-btn--compact {
+  padding: 0.5rem 1.05rem;
+}
