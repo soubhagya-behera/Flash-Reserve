@@ -1,0 +1,33 @@
+/* ============================================================
+   FlashReserve — Alert banner
+   ============================================================ */
+
+.fr-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.75rem 0.95rem;
+  border: 1px solid var(--fr-danger);
+  border-radius: var(--fr-radius-md);
+  background: var(--fr-danger-soft);
+}
+
+.fr-alert__mark {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin-top: 0.15rem;
+  border-radius: var(--fr-radius-full);
+  background: var(--fr-danger);
+  color: var(--fr-ink-on-brand);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.fr-alert__text {
+  font-size: var(--fr-text-sm);
+  line-height: 1.5;
+  color: var(--fr-text);
+}

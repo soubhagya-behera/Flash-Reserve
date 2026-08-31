@@ -1,0 +1,98 @@
+/* ============================================================
+   FlashReserve — Auth pages (login / register)
+   Shared shell: centered frosted card on the porcelain wash.
+   ============================================================ */
+
+.auth {
+  min-height: calc(100svh - 4.25rem); /* viewport minus the sticky nav */
+  display: grid;
+  align-items: center;
+  padding-block: var(--fr-space-xl);
+}
+
+.auth__container {
+  display: grid;
+  justify-items: center;
+}
+
+.auth__card {
+  position: relative;
+  width: min(26.5rem, 100%);
+  display: grid;
+  gap: var(--fr-space-sm);
+  padding: clamp(1.75rem, 4vw, 2.75rem);
+}
+
+/* Quiet brand glow behind the card, matching the hero atmosphere. */
+.auth__card::before {
+  content: '';
+  position: absolute;
+  inset: -12% -18%;
+  z-index: -1;
+  background:
+    var(--fr-gradient-glow-primary) 20% 0% / 60% 55% no-repeat,
+    var(--fr-gradient-glow-accent) 90% 100% / 55% 55% no-repeat;
+  pointer-events: none;
+}
+
+.auth__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  justify-self: start;
+  font-family: var(--fr-font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--fr-text);
+  text-decoration: none;
+}
+
+.auth__brand .fr-mark {
+  width: 2rem;
+  height: 2rem;
+  font-size: 1rem;
+  border-radius: var(--fr-radius-sm);
+}
+
+.auth__title {
+  margin-top: var(--fr-space-xs);
+}
+
+.auth__subtitle {
+  margin-bottom: var(--fr-space-sm);
+}
+
+.auth__form {
+  display: grid;
+  gap: var(--fr-space-md);
+}
+
+.auth__submit {
+  width: 100%;
+  margin-top: var(--fr-space-2xs);
+}
+
+.auth__submit:disabled {
+  opacity: 0.7;
+  cursor: progress;
+  transform: none;
+}
+
+.auth__switch {
+  margin-top: var(--fr-space-2xs);
+  text-align: center;
+}
+
+.auth__switch-link {
+  font-weight: 600;
+}
+
+@media (max-width: 30rem) {
+  .auth {
+    padding-block: var(--fr-space-lg);
+  }
+
+  .auth__card {
+    padding: 1.5rem 1.25rem;
+  }
+}

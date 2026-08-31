@@ -1,0 +1,58 @@
+/* ============================================================
+   FlashReserve — Form field primitive
+   ============================================================ */
+
+.fr-field {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.fr-field__label {
+  font-size: var(--fr-text-sm);
+  font-weight: 600;
+  color: var(--fr-text);
+}
+
+.fr-field__input {
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--fr-border-strong);
+  border-radius: var(--fr-radius-md);
+  background: var(--fr-surface);
+  color: var(--fr-text);
+  font-size: var(--fr-text-md);
+  transition:
+    border-color var(--fr-dur-fast) var(--fr-ease),
+    box-shadow var(--fr-dur-fast) var(--fr-ease);
+}
+
+.fr-field__input::placeholder {
+  color: var(--fr-text-muted);
+}
+
+.fr-field__input:hover:not(:disabled) {
+  border-color: var(--fr-primary);
+}
+
+.fr-field__input:focus-visible {
+  outline: 2px solid var(--fr-primary);
+  outline-offset: 1px;
+}
+
+.fr-field__input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Error state pairs a warm danger tint with the message below —
+   never color alone. */
+.fr-field__input--invalid {
+  border-color: var(--fr-danger);
+  background: var(--fr-danger-soft);
+}
+
+.fr-field__message {
+  font-size: var(--fr-text-xs);
+  font-weight: 600;
+  color: var(--fr-danger);
+}

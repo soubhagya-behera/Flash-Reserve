@@ -75,6 +75,13 @@
   gap: var(--fr-space-xs);
 }
 
+.nav__user {
+  font-size: var(--fr-text-sm);
+  font-weight: 600;
+  color: var(--fr-text-soft);
+  white-space: nowrap;
+}
+
 /* --- Mobile toggle (hidden on desktop) ---------------------- */
 
 .nav__toggle {

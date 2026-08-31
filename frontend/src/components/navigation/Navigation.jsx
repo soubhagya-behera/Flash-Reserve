@@ -1,22 +1,41 @@
 import { useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import Button from '../ui/Button.jsx'
+import { useAuth } from '../../auth/authContext.js'
 import { navLinks } from '../../data/landing.js'
 import './navigation.css'
 
 export default function Navigation() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const { isAuthenticated, user, logout } = useAuth()
+  const location = useLocation()
+  const navigate = useNavigate()
 
   const closeMenu = () => setMenuOpen(false)
+
+  // Section anchors only resolve on the landing page; from other
+  // routes they are prefixed so they navigate back home first.
+  const onHome = location.pathname === '/'
+  const resolveHref = (href) =>
+    href.startsWith('#') && !onHome && href !== '#' ? `/${href}` : href
+
+  function handleSignOut() {
+    closeMenu()
+    logout()
+    navigate('/')
+  }
+
+  const firstName = user?.name?.split(' ')[0] ?? ''
 
   return (
     <header className="nav">
       <div className="fr-container nav__inner">
-        <a href="#top" className="nav__brand" onClick={closeMenu}>
+        <Link to="/" className="nav__brand">
           <span className="fr-mark fr-gradient-brand" aria-hidden="true">
             F
           </span>
           <span className="nav__wordmark">FlashReserve</span>
-        </a>
+        </Link>
 
         <div
           id="primary-navigation"
@@ -26,7 +45,7 @@ export default function Navigation() {
             <ul className="nav__links">
               {navLinks.map((link) => (
                 <li key={link.label}>
-                  <a href={link.href} onClick={closeMenu}>
+                  <a href={resolveHref(link.href)} onClick={closeMenu}>
                     {link.label}
                   </a>
                 </li>
@@ -35,13 +54,31 @@ export default function Navigation() {
           </nav>
 
           <div className="nav__actions">
-            {/* Visual placeholders — authentication arrives in a later commit. */}
-            <Button href="#" variant="ghost" className="fr-btn--compact" tabIndex={menuOpen ? 0 : undefined}>
-              Sign in
-            </Button>
-            <Button href="#" variant="primary" className="fr-btn--compact" tabIndex={menuOpen ? 0 : undefined}>
-              Get started
-            </Button>
+            {isAuthenticated ? (
+              <>
+                <span className="nav__user">Hi, {firstName}</span>
+                <Button variant="ghost" className="fr-btn--compact" onClick={handleSignOut}>
+                  Sign out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="fr-btn fr-btn--ghost fr-btn--compact"
+                  onClick={closeMenu}
+                >
+                  Sign in
+                </Link>
+                <Link
+                  to="/register"
+                  className="fr-btn fr-btn--primary fr-btn--compact"
+                  onClick={closeMenu}
+                >
+                  Get started
+                </Link>
+              </>
+            )}
           </div>
         </div>
 
