@@ -115,6 +115,14 @@
   color: var(--fr-text-soft);
 }
 
+.booking-card__hold .fr-btn {
+  justify-self: start;
+}
+
+.booking-card__hold .fr-alert {
+  width: 100%;
+}
+
 /* --- Detailed record (detail page) --------------------------------- */
 
 .booking-card__details {

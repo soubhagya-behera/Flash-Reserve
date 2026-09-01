@@ -31,3 +31,13 @@
   line-height: 1.5;
   color: var(--fr-text);
 }
+
+/* Info tone: dusk blue, used for non-failure payment notices. */
+.fr-alert--info {
+  border-color: var(--fr-info);
+  background: rgba(91, 141, 239, 0.1);
+}
+
+.fr-alert--info .fr-alert__mark {
+  background: var(--fr-info);
+}

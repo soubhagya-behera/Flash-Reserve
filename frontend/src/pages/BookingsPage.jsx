@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Button from '../components/ui/Button.jsx'
-import BookingCard from '../components/bookings/BookingCard.jsx'
+import PayableBookingCard from '../components/bookings/PayableBookingCard.jsx'
 import Alert from '../components/ui/Alert.jsx'
 import { useAuth } from '../auth/authContext.js'
 import { ApiError } from '../services/apiClient.js'
@@ -94,6 +94,16 @@ export default function BookingsPage() {
     window.scrollTo(0, 0)
   }
 
+  /* A payment attempt settles with the backend's own state; swap
+     the refreshed record into the list. */
+  const handleBookingUpdated = useCallback((updated) => {
+    setBookings((current) =>
+      current.map((booking) =>
+        booking.bookingId === updated.bookingId ? updated : booking,
+      ),
+    )
+  }, [])
+
   const retry = () => setAttempt((current) => current + 1)
 
   if (!isAuthenticated) {
@@ -135,6 +145,7 @@ export default function BookingsPage() {
     onCancel: handleCancel,
     onRetry: retry,
     onPage: goToPage,
+    onBookingUpdated: handleBookingUpdated,
   })
 }
 
@@ -149,6 +160,7 @@ function renderBookingsView({
   onCancel,
   onRetry,
   onPage,
+  onBookingUpdated,
 }) {
   return (
     <main id="main" className="bookings fr-anim-fade-in">
@@ -201,10 +213,11 @@ function renderBookingsView({
             <ul className="bookings__list">
               {bookings.map((booking) => (
                 <li key={booking.bookingId}>
-                  <BookingCard
+                  <PayableBookingCard
                     booking={booking}
                     onCancel={onCancel}
                     cancelling={cancellingId === booking.bookingId}
+                    onBookingUpdated={onBookingUpdated}
                   />
                 </li>
               ))}

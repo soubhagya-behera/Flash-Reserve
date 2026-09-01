@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import BookingCard from '../components/bookings/BookingCard.jsx'
 import Alert from '../components/ui/Alert.jsx'
 import Button from '../components/ui/Button.jsx'
 import { useAuth } from '../auth/authContext.js'
+import { usePayment } from '../hooks/usePayment.js'
 import { ApiError } from '../services/apiClient.js'
 import * as bookingService from '../services/bookingService.js'
 import './bookings.css'
@@ -17,7 +18,7 @@ import './bookings.css'
  */
 export default function BookingDetailPage() {
   const { bookingId } = useParams()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
   const [booking, setBooking] = useState(null)
   const [status, setStatus] = useState('loading') // loading | ready | notFound | error
   const [errorMessage, setErrorMessage] = useState(null)
@@ -58,6 +59,25 @@ export default function BookingDetailPage() {
       controller.abort()
     }
   }, [isAuthenticated, bookingId, attempt])
+
+  /* The backend's own state is re-read after every payment attempt
+     (confirmed, dismissed or failed) — nothing is transitioned locally. */
+  const refreshFromBackend = useCallback(async () => {
+    try {
+      setBooking(await bookingService.getBooking(bookingId))
+    } catch {
+      // Keep the last known state; the next action re-fetches.
+    }
+  }, [bookingId])
+
+  const { startPayment, paying, notice, error } = usePayment({
+    bookingId,
+    description: booking
+      ? `Seat ${booking.seatNumber} · ${booking.eventName}`
+      : 'FlashReserve booking',
+    prefillEmail: user?.email,
+    onRefresh: refreshFromBackend,
+  })
 
   /* The backend's cancel response is the new truth for this record. */
   const handleCancel = async () => {
@@ -155,6 +175,10 @@ export default function BookingDetailPage() {
                 detailed
                 onCancel={handleCancel}
                 cancelling={cancelling}
+                onPay={startPayment}
+                paying={paying}
+                paymentNotice={notice}
+                paymentError={error}
               />
             </>
           )}

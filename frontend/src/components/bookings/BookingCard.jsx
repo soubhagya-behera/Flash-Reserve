@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import Button from '../ui/Button.jsx'
+import Alert from '../ui/Alert.jsx'
 import { useCountdown } from '../../hooks/useCountdown.js'
 import {
   formatEventDate,
@@ -25,7 +26,16 @@ const STATUS_TONES = {
  * page (`detailed` shows the full record). Cancellation is a
  * two-step control so a single stray click never cancels.
  */
-export default function BookingCard({ booking, detailed = false, onCancel, cancelling = false }) {
+export default function BookingCard({
+  booking,
+  detailed = false,
+  onCancel,
+  cancelling = false,
+  onPay,
+  paying = false,
+  paymentNotice = null,
+  paymentError = null,
+}) {
   const [confirming, setConfirming] = useState(false)
   const tone = STATUS_TONES[booking.status] ?? 'closed'
   const remainingSeconds = useCountdown(
@@ -73,7 +83,8 @@ export default function BookingCard({ booking, detailed = false, onCancel, cance
                 <strong>{formatRemainingSeconds(remainingSeconds)}</strong>
               </p>
               <p className="booking-card__note fr-small">
-                Complete payment before the hold expires to confirm this seat.
+                Your seat is held temporarily. Complete payment before the hold
+                expires to confirm it.
               </p>
             </>
           ) : (
@@ -82,6 +93,14 @@ export default function BookingCard({ booking, detailed = false, onCancel, cance
               automatically.
             </p>
           )}
+
+          {onPay && remainingSeconds > 0 && (
+            <Button onClick={onPay} disabled={paying} aria-busy={paying}>
+              {paying ? 'Preparing secure checkout…' : 'Complete payment'}
+            </Button>
+          )}
+          {paymentError && <Alert>{paymentError}</Alert>}
+          {paymentNotice && <Alert tone="info">{paymentNotice}</Alert>}
         </div>
       )}
 
