@@ -1,0 +1,206 @@
+/* ============================================================
+   FlashReserve — Booking card
+   A personal record, not a marketing card: calm surface, the
+   backend's own status as a tone-coded chip, dusk-blue hold
+   countdown for PENDING bookings. Status is never color-only —
+   the raw enum text sits in the chip.
+   ============================================================ */
+
+.booking-card {
+  display: grid;
+  gap: 0.55rem;
+  align-content: start;
+  padding: var(--fr-space-md);
+  transition:
+    transform var(--fr-dur) var(--fr-ease),
+    box-shadow var(--fr-dur) var(--fr-ease);
+}
+
+.booking-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--fr-shadow-md);
+}
+
+.booking-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--fr-space-xs);
+  flex-wrap: wrap;
+}
+
+/* --- Status chip: backend enum, tone-coded ----------------------- */
+
+.booking-card__status {
+  padding: 0.25rem 0.7rem;
+  border-radius: var(--fr-radius-full);
+  font-size: var(--fr-text-xs);
+  font-weight: 700;
+  letter-spacing: var(--fr-tracking-caps);
+}
+
+.booking-card__status--pending {
+  background: var(--fr-warning-soft);
+  color: var(--fr-warning);
+}
+
+.booking-card__status--confirmed {
+  background: var(--fr-success-soft);
+  color: var(--fr-success);
+}
+
+.booking-card__status--closed {
+  background: var(--fr-surface-soft);
+  color: var(--fr-text-muted);
+}
+
+.booking-card__seat {
+  font-size: var(--fr-text-xs);
+  font-weight: 700;
+  color: var(--fr-primary-strong);
+  background: var(--fr-primary-soft);
+  padding: 0.25rem 0.7rem;
+  border-radius: var(--fr-radius-full);
+}
+
+/* --- Event identity ---------------------------------------------- */
+
+.booking-card__event {
+  font-family: var(--fr-font-display);
+  font-size: var(--fr-text-h3);
+  line-height: var(--fr-leading-heading);
+}
+
+.booking-card__event-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.booking-card__event-link:hover {
+  color: var(--fr-primary-strong);
+}
+
+.booking-card__venue {
+  color: var(--fr-text-soft);
+}
+
+.booking-card__when {
+  font-size: var(--fr-text-sm);
+  color: var(--fr-text-muted);
+}
+
+/* --- Pending hold messaging --------------------------------------- */
+
+.booking-card__hold {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px dashed var(--fr-info);
+  border-radius: var(--fr-radius-md);
+  background: rgba(91, 141, 239, 0.08);
+}
+
+.booking-card__countdown {
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fr-text-sm);
+  color: var(--fr-info);
+}
+
+.booking-card__countdown strong {
+  font-weight: 700;
+}
+
+.booking-card__note {
+  margin: 0;
+  color: var(--fr-text-soft);
+}
+
+/* --- Detailed record (detail page) --------------------------------- */
+
+.booking-card__details {
+  display: grid;
+  gap: 0.6rem 1.25rem;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  margin: 0.4rem 0 0;
+  padding: 0.85rem 1rem;
+  border: 1px dashed var(--fr-border-strong);
+  border-radius: var(--fr-radius-md);
+  background: var(--fr-surface);
+}
+
+.booking-card__details dt {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: var(--fr-tracking-caps);
+  text-transform: uppercase;
+  color: var(--fr-text-muted);
+}
+
+.booking-card__details dd {
+  margin: 0.2rem 0 0;
+  font-size: var(--fr-text-sm);
+  font-weight: 600;
+  color: var(--fr-text);
+}
+
+.booking-card__booking-id {
+  font-weight: 500 !important;
+  color: var(--fr-text-soft) !important;
+  word-break: break-all;
+}
+
+/* --- Footer actions ------------------------------------------------- */
+
+.booking-card__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--fr-space-sm);
+  flex-wrap: wrap;
+  margin-top: 0.35rem;
+  padding-top: 0.85rem;
+  border-top: 1px dashed var(--fr-border-strong);
+}
+
+.booking-card__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: var(--fr-text-sm);
+  font-weight: 600;
+  color: var(--fr-primary-strong);
+  text-decoration: none;
+}
+
+.booking-card__cta:hover {
+  text-decoration: underline;
+}
+
+.booking-card__cancel {
+  display: grid;
+  gap: 0.35rem;
+  justify-items: end;
+}
+
+.booking-card__confirm {
+  margin: 0;
+  color: var(--fr-text-soft);
+}
+
+.booking-card__cancel-actions {
+  display: flex;
+  gap: var(--fr-space-2xs);
+}
+
+.booking-card__cancel-button {
+  color: var(--fr-danger);
+}
+
+.booking-card__cancel-button:hover {
+  border-color: var(--fr-danger);
+}
+
+.booking-card__cancel-button:focus-visible {
+  outline: 2px solid var(--fr-danger);
+  outline-offset: 3px;
+}

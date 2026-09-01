@@ -1,0 +1,144 @@
+/* ============================================================
+   FlashReserve — Bookings pages
+   Personal records in a calm single-column stream (list) or a
+   focused detail card. Compact on mobile, never overflowing.
+   ============================================================ */
+
+.bookings {
+  padding-block: clamp(3rem, 7vw, 5rem) var(--fr-section);
+}
+
+.bookings__header {
+  max-width: 38rem;
+  margin-bottom: clamp(2rem, 4vw, 3rem);
+}
+
+.bookings__eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: var(--fr-tracking-caps);
+  text-transform: uppercase;
+  color: var(--fr-accent);
+}
+
+.bookings__title {
+  margin-top: var(--fr-space-sm);
+}
+
+.bookings__lead {
+  margin-top: var(--fr-space-sm);
+  color: var(--fr-text-soft);
+}
+
+/* --- Booking stream: one focused column ------------------------- */
+
+.bookings__list {
+  display: grid;
+  gap: var(--fr-gap-card);
+  max-width: 42rem;
+  list-style: none;
+}
+
+/* --- Shared state panels ----------------------------------------- */
+
+.bookings__state {
+  display: grid;
+  gap: var(--fr-space-sm);
+  justify-items: center;
+  max-width: 34rem;
+  margin-inline: auto;
+  padding: clamp(2.5rem, 6vw, 4rem) var(--fr-space-md);
+  text-align: center;
+}
+
+.bookings__state-detail {
+  max-width: 26rem;
+}
+
+.bookings__state-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--fr-space-xs);
+  margin-top: var(--fr-space-2xs);
+}
+
+/* --- Pager --------------------------------------------------------- */
+
+.bookings__pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--fr-space-sm);
+  margin-top: var(--fr-space-lg);
+}
+
+/* --- Detail page ----------------------------------------------------- */
+
+.bookings__detail {
+  display: grid;
+  gap: var(--fr-space-md);
+  max-width: 42rem;
+}
+
+.bookings__back {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: var(--fr-text-sm);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.bookings__back:hover {
+  text-decoration: underline;
+}
+
+/* --- Skeleton --------------------------------------------------------- */
+
+.bookings__skeleton {
+  display: grid;
+  gap: 0.6rem;
+  padding: var(--fr-space-md);
+}
+
+.bookings__line {
+  display: block;
+  border-radius: var(--fr-radius-sm);
+  background: var(--fr-surface-soft);
+  animation: fr-pulse-soft 1.6s ease-in-out infinite;
+}
+
+.bookings__line--chip {
+  width: 7rem;
+  height: 1.3rem;
+}
+
+.bookings__line--title {
+  width: 70%;
+  height: 1.4rem;
+}
+
+.bookings__line--meta {
+  width: 55%;
+  height: 0.85rem;
+}
+
+.bookings__line--short {
+  width: 35%;
+}
+
+/* --- Screen-reader-only status ---------------------------------------- */
+
+.bookings__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}

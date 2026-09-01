@@ -62,6 +62,13 @@ export default function Navigation() {
           <div className="nav__actions">
             {isAuthenticated ? (
               <>
+                <Link
+                  to="/bookings"
+                  className="fr-btn fr-btn--ghost fr-btn--compact"
+                  onClick={closeMenu}
+                >
+                  My bookings
+                </Link>
                 <span className="nav__user">Hi, {firstName}</span>
                 <Button variant="ghost" className="fr-btn--compact" onClick={handleSignOut}>
                   Sign out
