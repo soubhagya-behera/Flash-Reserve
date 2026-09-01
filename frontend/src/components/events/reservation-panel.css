@@ -1,0 +1,165 @@
+/* ============================================================
+   FlashReserve — Reservation hold panel
+   Visually important but calm: elevated soft surface, one accent
+   chip for the backend PENDING status, dusk-blue countdown built
+   on existing tokens and the shared animation primitives.
+   ============================================================ */
+
+.reservation-panel {
+  display: grid;
+  gap: 1rem;
+  padding: clamp(1.25rem, 3vw, 1.75rem);
+  border: 1px solid var(--fr-border);
+  border-radius: var(--fr-radius-lg);
+  background: var(--fr-gradient-surface);
+  box-shadow: var(--fr-shadow-sm);
+}
+
+.reservation-panel__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--fr-space-sm);
+}
+
+.reservation-panel__eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: var(--fr-tracking-caps);
+  text-transform: uppercase;
+  color: var(--fr-accent);
+}
+
+.reservation-panel__title {
+  font-family: var(--fr-font-display);
+  font-size: var(--fr-text-h3);
+  color: var(--fr-text);
+}
+
+/* The backend's own status vocabulary — never a fake "confirmed". */
+.reservation-panel__chip {
+  padding: 0.3rem 0.75rem;
+  border-radius: var(--fr-radius-full);
+  background: var(--fr-warning-soft);
+  color: var(--fr-warning);
+  font-size: var(--fr-text-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.reservation-panel__message {
+  max-width: 34rem;
+  color: var(--fr-text-soft);
+}
+
+/* --- Hold facts: only fields from ReservationResponse ------------- */
+
+.reservation-panel__details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.75rem 1.25rem;
+  margin: 0;
+  padding: 0.9rem 1rem;
+  border: 1px dashed var(--fr-border-strong);
+  border-radius: var(--fr-radius-md);
+  background: var(--fr-surface);
+}
+
+.reservation-panel__detail dt {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: var(--fr-tracking-caps);
+  text-transform: uppercase;
+  color: var(--fr-text-muted);
+}
+
+.reservation-panel__detail dd {
+  margin: 0.2rem 0 0;
+  font-weight: 600;
+  color: var(--fr-text);
+}
+
+.reservation-panel__detail--wide {
+  grid-column: 1 / -1;
+}
+
+.reservation-panel__booking-id {
+  font-family: var(--fr-font-body);
+  font-size: var(--fr-text-xs);
+  font-weight: 500 !important;
+  color: var(--fr-text-soft) !important;
+  word-break: break-all;
+}
+
+/* --- Countdown ----------------------------------------------------- */
+
+.reservation-panel__countdown {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin: 0;
+}
+
+.reservation-panel__countdown-value {
+  font-family: var(--fr-font-display);
+  font-size: clamp(2rem, 5vw, 2.5rem);
+  font-variant-numeric: tabular-nums;
+  color: var(--fr-info);
+  line-height: 1;
+}
+
+.reservation-panel__countdown-label {
+  font-size: var(--fr-text-xs);
+  font-weight: 700;
+  letter-spacing: var(--fr-tracking-caps);
+  text-transform: uppercase;
+  color: var(--fr-text-muted);
+}
+
+/* --- Actions -------------------------------------------------------- */
+
+.reservation-panel__link {
+  justify-self: start;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: var(--fr-text-sm);
+  font-weight: 600;
+  color: var(--fr-primary-strong);
+  cursor: pointer;
+}
+
+.reservation-panel__link:hover {
+  text-decoration: underline;
+}
+
+.reservation-panel__link:focus-visible {
+  outline: 2px solid var(--fr-primary);
+  outline-offset: 3px;
+  border-radius: var(--fr-radius-sm);
+}
+
+/* --- Expired hold --------------------------------------------------- */
+
+.reservation-panel__expired {
+  display: grid;
+  gap: 0.6rem;
+  justify-items: start;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--fr-danger);
+  border-radius: var(--fr-radius-md);
+  background: var(--fr-danger-soft);
+}
+
+.reservation-panel__expired-title {
+  font-weight: 700;
+  color: var(--fr-danger);
+}
+
+.reservation-panel__expired p {
+  margin: 0;
+}
+
+.reservation-panel__expired .fr-btn {
+  margin-top: 0.25rem;
+}

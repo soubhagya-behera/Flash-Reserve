@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import Alert from '../components/ui/Alert.jsx'
 import Button from '../components/ui/Button.jsx'
 import TextField from '../components/ui/TextField.jsx'
@@ -11,6 +11,9 @@ import './auth.css'
 export default function LoginPage() {
   const { user, login } = useAuth()
   const navigate = useNavigate()
+  // Pages that require an account (e.g. reserving a seat) pass their
+  // location in router state so sign-in returns the user to them.
+  const from = useLocation().state?.from ?? '/'
   const [form, setForm] = useState({ email: '', password: '' })
   const [fieldErrors, setFieldErrors] = useState({})
   const [formError, setFormError] = useState(null)
@@ -41,7 +44,7 @@ export default function LoginPage() {
     setSubmitting(true)
     try {
       await login({ email: form.email.trim(), password: form.password })
-      navigate('/', { replace: true })
+      navigate(from, { replace: true })
     } catch (error) {
       const state = toFormErrorState(error)
       setFormError(state.message)

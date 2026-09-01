@@ -1,10 +1,13 @@
-import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import Button from '../components/ui/Button.jsx'
 import SeatMap from '../components/events/SeatMap.jsx'
+import ReservationPanel from '../components/events/ReservationPanel.jsx'
+import Alert from '../components/ui/Alert.jsx'
 import { useAuth } from '../auth/authContext.js'
 import { ApiError } from '../services/apiClient.js'
 import * as eventService from '../services/eventService.js'
+import * as reservationService from '../services/reservationService.js'
 import { formatEventDate, formatEventTime, formatTicketPrice } from '../utils/format.js'
 import './event-detail.css'
 
@@ -16,19 +19,25 @@ const STATUS_LABELS = {
 }
 
 /**
- * Public detail view of one published event with its real seat
- * map. Selection here is a local preview only — nothing is held
- * and no reservation is submitted; that arrives in a later commit.
+ * Public detail view of one published event with its real seat map
+ * and the real reservation flow. Selecting a seat is local only;
+ * the seat is actually held (PENDING booking, HELD seat) when the
+ * user continues and the backend accepts the reservation.
  */
 export default function EventDetailPage() {
   const { eventId } = useParams()
-  const { isAuthenticated } = useAuth()
+  const navigate = useNavigate()
+  const { isAuthenticated, logout } = useAuth()
   const [event, setEvent] = useState(null)
   const [seats, setSeats] = useState([])
   const [status, setStatus] = useState('loading') // loading | ready | notFound | error
   const [errorMessage, setErrorMessage] = useState('')
-  const [selectedSeatIds, setSelectedSeatIds] = useState([])
+  const [selectedSeatId, setSelectedSeatId] = useState(null)
+  const [reservation, setReservation] = useState(null)
+  const [reserving, setReserving] = useState(false)
+  const [reservationError, setReservationError] = useState(null)
   const [nonce, setNonce] = useState(0)
+  const [seatsNonce, setSeatsNonce] = useState(0)
   const [resolved, setResolved] = useState(null)
 
   /* "Loading" is derived by comparing the requested event/attempt
@@ -47,7 +56,9 @@ export default function EventDetailPage() {
     ])
       .then(([eventData, seatList]) => {
         if (!active) return
-        setSelectedSeatIds([])
+        setSelectedSeatId(null)
+        setReservation(null)
+        setReservationError(null)
         setEvent(eventData)
         setSeats(seatList ?? [])
         setStatus('ready')
@@ -77,12 +88,82 @@ export default function EventDetailPage() {
     }
   }, [eventId, nonce])
 
+  /* Availability-only refresh (after a reservation result or a
+     conflict). Skips the initial mount: the load effect above has
+     already fetched the seats. Errors stay silent here — the map
+     simply keeps its last known state and the next action retries. */
+  const isInitialSeatsRun = useRef(true)
+  useEffect(() => {
+    if (isInitialSeatsRun.current) {
+      isInitialSeatsRun.current = false
+      return
+    }
+    const controller = new AbortController()
+    eventService
+      .listEventSeats(eventId, { signal: controller.signal })
+      .then((seatList) => setSeats(seatList ?? []))
+      .catch((error) => {
+        if (error instanceof DOMException && error.name === 'AbortError') return
+        // Best-effort refresh; stale state is corrected on the next action.
+      })
+    return () => controller.abort()
+  }, [eventId, seatsNonce])
+
+  /* One seat per reservation — the backend endpoint holds exactly
+     one seat per call, so selection is single-seat: picking another
+     seat replaces the current choice. */
   const toggleSeat = (seatId) => {
-    setSelectedSeatIds((current) =>
-      current.includes(seatId)
-        ? current.filter((id) => id !== seatId)
-        : [...current, seatId],
-    )
+    setSelectedSeatId((current) => (current === seatId ? null : seatId))
+  }
+
+  const handleContinue = async () => {
+    if (reserving || !selectedSeatId) return
+
+    // Never send the reservation request unauthenticated; sign in
+    // first and come straight back to this event afterwards.
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: `/events/${eventId}` } })
+      return
+    }
+
+    setReserving(true)
+    setReservationError(null)
+    try {
+      const result = await reservationService.reserveSeat(eventId, selectedSeatId)
+      setReservation(result)
+      setSelectedSeatId(null)
+      // Re-fetch real availability: the backend now reports this seat HELD.
+      setSeatsNonce((current) => current + 1)
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 409) {
+        // Someone else reserved the seat first. Clear the selection and
+        // refresh real availability — never fake the seat's new state.
+        setReservationError(
+          error.message ??
+            'That seat is no longer available. Someone else may have reserved it.',
+        )
+        setSelectedSeatId(null)
+        setSeatsNonce((current) => current + 1)
+      } else if (error instanceof ApiError && error.status === 401) {
+        // A session can also expire while the page stays open, after
+        // the restored auth state was checked. Clear the dead session
+        // through the existing auth mechanism: the UI returns to its
+        // normal unauthenticated path (Continue → sign in → return).
+        logout()
+        setReservationError(
+          'Your session has expired. Please sign in to reserve your seat.',
+        )
+        setSelectedSeatId(null)
+      } else {
+        setReservationError(
+          error instanceof ApiError
+            ? error.message
+            : 'Could not reserve your seat. Please try again.',
+        )
+      }
+    } finally {
+      setReserving(false)
+    }
   }
 
   const retry = () => setNonce((current) => current + 1)
@@ -126,17 +207,38 @@ export default function EventDetailPage() {
   return renderReadyView({
     event,
     seats,
-    selectedSeatIds,
+    selectedSeatId,
     onToggleSeat: toggleSeat,
     isAuthenticated,
+    reservation,
+    reserving,
+    reservationError,
+    onContinue: handleContinue,
+    onReservationDismiss: () => setReservation(null),
+    onReservationRefresh: () => {
+      setReservation(null)
+      setSeatsNonce((current) => current + 1)
+    },
   })
 }
 
-function renderReadyView({ event, seats, selectedSeatIds, onToggleSeat, isAuthenticated }) {
+function renderReadyView({
+  event,
+  seats,
+  selectedSeatId,
+  onToggleSeat,
+  isAuthenticated,
+  reservation,
+  reserving,
+  reservationError,
+  onContinue,
+  onReservationDismiss,
+  onReservationRefresh,
+}) {
   const price = formatTicketPrice(event.ticketPrice)
   const statusLabel = STATUS_LABELS[event.status] ?? event.status
   const availableCount = seats.filter((seat) => seat.status === 'AVAILABLE').length
-  const selectedSeats = seats.filter((seat) => selectedSeatIds.includes(seat.id))
+  const selectedSeat = seats.find((seat) => seat.id === selectedSeatId) ?? null
 
   return (
     <main id="main" className="event-detail fr-anim-fade-in">
@@ -183,31 +285,52 @@ function renderReadyView({ event, seats, selectedSeatIds, onToggleSeat, isAuthen
 
           <SeatMap
             seats={seats}
-            selectedSeatIds={selectedSeatIds}
+            selectedSeatIds={selectedSeatId ? [selectedSeatId] : []}
             onToggleSeat={onToggleSeat}
           />
 
-          <div className="event-detail__selection">
-            <div>
-              <h3 className="event-detail__selection-title">Your selection</h3>
-              {selectedSeats.length > 0 ? (
-                <p className="event-detail__selection-seats">
-                  {selectedSeats.map((seat) => seat.seatNumber).join(', ')}
-                </p>
-              ) : (
-                <p className="event-detail__selection-empty fr-small">
-                  No seats selected yet — pick the seats you want from the map.
-                </p>
-              )}
-              <p className="event-detail__note fr-caption">
-                Selecting a seat does not reserve it.{' '}
-                {isAuthenticated ? 'You are signed in — ' : 'You will sign in when '}
-                seat reservation arrives in the next update.
-              </p>
-            </div>
+          {reservationError ? <Alert>{reservationError}</Alert> : null}
 
-            <Button disabled>Continue to reservation</Button>
-          </div>
+          {reservation ? (
+            <ReservationPanel
+              reservation={reservation}
+              eventName={event.name}
+              onRefreshAvailability={onReservationRefresh}
+              onReserveAnotherSeat={onReservationDismiss}
+            />
+          ) : (
+            <div className="event-detail__selection">
+              <div>
+                <h3 className="event-detail__selection-title">Your selection</h3>
+                {selectedSeat ? (
+                  <p className="event-detail__selection-seats">
+                    {selectedSeat.seatNumber}
+                  </p>
+                ) : (
+                  <p className="event-detail__selection-empty fr-small">
+                    No seat selected yet — pick the seat you want from the map.
+                  </p>
+                )}
+                <p className="event-detail__note fr-caption">
+                  Selecting a seat does not reserve it — the hold is only
+                  created once the server confirms your reservation.{' '}
+                  {!isAuthenticated && 'You will be asked to sign in first.'}
+                </p>
+              </div>
+
+              <Button
+                onClick={onContinue}
+                disabled={!selectedSeat || reserving}
+                aria-busy={reserving}
+              >
+                {reserving
+                  ? 'Reserving…'
+                  : isAuthenticated
+                    ? 'Continue to reservation'
+                    : 'Sign in to reserve'}
+              </Button>
+            </div>
+          )}
         </section>
       </div>
     </main>

@@ -10,7 +10,16 @@
 import { apiRequest } from './apiClient.js'
 
 function toAuthResult(data) {
-  return { token: data.accessToken, user: data.user }
+  return {
+    token: data.accessToken,
+    user: data.user,
+    // expiresIn is the JWT lifetime in seconds (backend AuthResponse);
+    // persisting the absolute expiry lets loadAuth reject dead tokens.
+    expiresAt:
+      Number.isFinite(data.expiresIn) && data.expiresIn > 0
+        ? Date.now() + data.expiresIn * 1000
+        : null,
+  }
 }
 
 export function register({ name, email, password }) {
