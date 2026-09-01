@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { footerLinks } from '../../data/landing.js'
 import './footer.css'
 
@@ -22,7 +23,11 @@ export default function Footer() {
           <ul className="footer__links">
             {footerLinks.map((link) => (
               <li key={link.label}>
-                <a href={link.href}>{link.label}</a>
+                {link.href.startsWith('/') ? (
+                  <Link to={link.href}>{link.label}</Link>
+                ) : (
+                  <a href={link.href}>{link.label}</a>
+                )}
               </li>
             ))}
           </ul>

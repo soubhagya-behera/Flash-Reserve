@@ -3,6 +3,8 @@ import Navigation from './components/navigation/Navigation.jsx'
 import LandingPage from './pages/LandingPage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
 import RegisterPage from './pages/RegisterPage.jsx'
+import EventsPage from './pages/EventsPage.jsx'
+import EventDetailPage from './pages/EventDetailPage.jsx'
 
 function App() {
   return (
@@ -23,6 +25,8 @@ function App() {
 
       <Routes>
         <Route path="/" element={<LandingPage />} />
+        <Route path="/events" element={<EventsPage />} />
+        <Route path="/events/:eventId" element={<EventDetailPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />

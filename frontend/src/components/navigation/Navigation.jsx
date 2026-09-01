@@ -45,9 +45,15 @@ export default function Navigation() {
             <ul className="nav__links">
               {navLinks.map((link) => (
                 <li key={link.label}>
-                  <a href={resolveHref(link.href)} onClick={closeMenu}>
-                    {link.label}
-                  </a>
+                  {link.href.startsWith('/') ? (
+                    <Link to={link.href} onClick={closeMenu}>
+                      {link.label}
+                    </Link>
+                  ) : (
+                    <a href={resolveHref(link.href)} onClick={closeMenu}>
+                      {link.label}
+                    </a>
+                  )}
                 </li>
               ))}
             </ul>

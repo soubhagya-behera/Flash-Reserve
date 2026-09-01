@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import Button from '../ui/Button.jsx'
 import ReservationVisual from './ReservationVisual.jsx'
 import { heroFlow } from '../../data/landing.js'
@@ -24,7 +25,9 @@ export default function Hero() {
           </p>
 
           <div className="hero__cta fr-anim-fade-up" style={{ animationDelay: '270ms' }}>
-            <Button href="#">Explore events</Button>
+            <Link to="/events" className="fr-btn fr-btn--primary">
+              Explore events
+            </Link>
             <Button href="#how-it-works" variant="ghost">
               How it works
             </Button>

@@ -1,0 +1,152 @@
+/* ============================================================
+   FlashReserve — Seat map
+   Mirrors the landing-page reservation visual: iris violet for
+   open seats, aurora magenta for the visitor's selection, dusk
+   blue for holds, muted plum-grey for booked seats. State never
+   relies on color alone: glyphs, strikethrough, stripes and
+   aria labels carry the same meaning.
+   ============================================================ */
+
+.seat-map {
+  display: grid;
+  gap: 1rem;
+}
+
+/* --- Legend ----------------------------------------------------- */
+
+.seat-map__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.1rem;
+  list-style: none;
+}
+
+.seat-map__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: var(--fr-text-xs);
+  color: var(--fr-text-muted);
+}
+
+.seat-map__swatch {
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 0.25rem;
+  border: 1px solid transparent;
+}
+
+.seat-map__swatch--available {
+  background: var(--fr-primary-soft);
+  border-color: var(--fr-primary);
+}
+
+.seat-map__swatch--selected {
+  background: var(--fr-accent);
+}
+
+.seat-map__swatch--held {
+  background: rgba(91, 141, 239, 0.22);
+  border-color: var(--fr-info);
+}
+
+.seat-map__swatch--booked {
+  background: var(--fr-surface-soft);
+  border-color: var(--fr-border-strong);
+}
+
+/* --- Seat grid ---------------------------------------------------
+   auto-fill keeps the map inside its container at every width,
+   so mobile never scrolls horizontally. */
+
+.seat-map__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(3.25rem, 1fr));
+  gap: 0.45rem;
+}
+
+.seat-map__seat {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  min-width: 0;
+  height: 2.5rem;
+  padding: 0;
+  border-radius: 0.6rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  transition:
+    transform var(--fr-dur-fast) var(--fr-ease),
+    box-shadow var(--fr-dur-fast) var(--fr-ease),
+    background-color var(--fr-dur-fast) var(--fr-ease),
+    color var(--fr-dur-fast) var(--fr-ease),
+    border-color var(--fr-dur-fast) var(--fr-ease);
+}
+
+/* Available: quiet violet chip that lifts on approach. */
+.seat-map__seat--available {
+  background: var(--fr-primary-soft);
+  border: 1px solid var(--fr-primary);
+  color: var(--fr-primary-strong);
+  cursor: pointer;
+}
+
+.seat-map__seat--available:hover {
+  transform: translateY(-2px);
+  background: var(--fr-surface);
+  box-shadow: var(--fr-shadow-sm);
+}
+
+/* Selected: brand accent with a soft ring, mirroring the hero. */
+.seat-map__seat--selected,
+.seat-map__seat--selected:hover {
+  transform: translateY(-1px);
+  background: var(--fr-accent);
+  border-color: var(--fr-accent);
+  color: var(--fr-ink-on-brand);
+  box-shadow: 0 0 0 3px var(--fr-accent-soft);
+}
+
+/* Held: dusk blue with diagonal hatching. */
+.seat-map__seat--held {
+  background-color: rgba(91, 141, 239, 0.14);
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent 0 3px,
+    rgba(91, 141, 239, 0.2) 3px 6px
+  );
+  border: 1px dashed var(--fr-info);
+  color: var(--fr-info);
+  cursor: default;
+}
+
+/* Booked: settled plum-grey with strikethrough. */
+.seat-map__seat--booked {
+  background: var(--fr-surface-soft);
+  border: 1px solid var(--fr-border-strong);
+  color: var(--fr-text-muted);
+  text-decoration: line-through;
+  cursor: default;
+}
+
+/* --- Empty map --------------------------------------------------- */
+
+.seat-map__empty {
+  padding: var(--fr-space-md);
+  border: 1px dashed var(--fr-border-strong);
+  border-radius: var(--fr-radius-md);
+  color: var(--fr-text-muted);
+}
+
+@media (max-width: 30rem) {
+  .seat-map__grid {
+    grid-template-columns: repeat(auto-fill, minmax(2.9rem, 1fr));
+    gap: 0.4rem;
+  }
+
+  .seat-map__seat {
+    height: 2.35rem;
+  }
+}

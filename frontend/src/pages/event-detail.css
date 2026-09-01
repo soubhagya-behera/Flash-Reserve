@@ -1,0 +1,200 @@
+/* ============================================================
+   FlashReserve — Event detail page
+   Elevated event header, seat-availability panel and selection
+   summary. Compact on mobile; the seat map never overflows.
+   ============================================================ */
+
+.event-detail {
+  padding-block: clamp(2rem, 5vw, 3.5rem) var(--fr-section);
+}
+
+.event-detail__container {
+  display: grid;
+  gap: clamp(1.25rem, 3vw, 2rem);
+}
+
+.event-detail__back {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: var(--fr-text-sm);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.event-detail__back:hover {
+  text-decoration: underline;
+}
+
+/* --- Event header ----------------------------------------------- */
+
+.event-detail__header {
+  display: grid;
+  gap: 0.8rem;
+  justify-items: start;
+  padding: clamp(1.5rem, 4vw, 2.75rem);
+}
+
+.event-detail__eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: var(--fr-tracking-caps);
+  text-transform: uppercase;
+  color: var(--fr-accent);
+}
+
+.event-detail__meta {
+  color: var(--fr-text-soft);
+}
+
+.event-detail__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.event-detail__chip {
+  padding: 0.3rem 0.75rem;
+  border-radius: var(--fr-radius-full);
+  background: var(--fr-surface-soft);
+  color: var(--fr-text-soft);
+  font-size: var(--fr-text-xs);
+  font-weight: 700;
+}
+
+.event-detail__chip--price {
+  background: var(--fr-primary-soft);
+  color: var(--fr-primary-strong);
+}
+
+.event-detail__chip--status {
+  background: var(--fr-success-soft);
+  color: var(--fr-success);
+}
+
+.event-detail__description {
+  max-width: var(--fr-measure);
+  color: var(--fr-text-soft);
+}
+
+/* --- Seats section ----------------------------------------------- */
+
+.event-detail__seats {
+  display: grid;
+  gap: 1.25rem;
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+.event-detail__seats-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--fr-space-xs);
+  flex-wrap: wrap;
+}
+
+.event-detail__selection {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--fr-space-md);
+  flex-wrap: wrap;
+  padding-top: 1.25rem;
+  border-top: 1px dashed var(--fr-border-strong);
+}
+
+.event-detail__selection-title {
+  font-family: var(--fr-font-body);
+  font-size: var(--fr-text-sm);
+  font-weight: 700;
+  letter-spacing: var(--fr-tracking-caps);
+  text-transform: uppercase;
+  color: var(--fr-text-muted);
+}
+
+.event-detail__selection-seats {
+  margin-top: 0.3rem;
+  font-family: var(--fr-font-display);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--fr-accent);
+}
+
+.event-detail__selection-empty {
+  margin-top: 0.3rem;
+}
+
+.event-detail__note {
+  margin-top: 0.4rem;
+  max-width: 30rem;
+}
+
+/* --- State panels and skeleton ------------------------------------ */
+
+.event-detail__state {
+  display: grid;
+  gap: var(--fr-space-sm);
+  justify-items: center;
+  max-width: 34rem;
+  margin-inline: auto;
+  padding: clamp(2.5rem, 6vw, 4rem) var(--fr-space-md);
+  text-align: center;
+}
+
+.event-detail__state-detail {
+  max-width: 26rem;
+}
+
+.event-detail__state-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--fr-space-xs);
+}
+
+.event-detail__skeleton {
+  display: grid;
+  gap: clamp(1.25rem, 3vw, 2rem);
+}
+
+.event-detail__line {
+  display: block;
+  border-radius: var(--fr-radius-sm);
+  background: var(--fr-surface-soft);
+  animation: fr-pulse-soft 1.6s ease-in-out infinite;
+}
+
+.event-detail__line--back {
+  width: 6rem;
+  height: 0.9rem;
+}
+
+.event-detail__line--eyebrow {
+  width: 4rem;
+  height: 0.75rem;
+}
+
+.event-detail__line--title {
+  width: 65%;
+  height: 1.6rem;
+}
+
+.event-detail__line--short {
+  width: 40%;
+}
+
+.event-detail__line--meta {
+  width: 55%;
+  height: 0.9rem;
+}
+
+.event-detail__line--chip {
+  width: 10rem;
+  height: 1.3rem;
+}
+
+.event-detail__line--block {
+  height: 10rem;
+  border-radius: var(--fr-radius-md);
+}

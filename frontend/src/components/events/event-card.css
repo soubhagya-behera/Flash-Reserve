@@ -1,0 +1,157 @@
+/* ============================================================
+   FlashReserve — Event card
+   Resting cards lift gently on hover; the whole card is one
+   visual unit while the title and CTA remain real links.
+   ============================================================ */
+
+.event-card {
+  display: grid;
+  gap: 0.6rem;
+  align-content: start;
+  height: 100%;
+  padding: var(--fr-space-md);
+  transition:
+    transform var(--fr-dur) var(--fr-ease),
+    box-shadow var(--fr-dur) var(--fr-ease);
+}
+
+.event-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--fr-shadow-md);
+}
+
+/* Keyboard users get the same affordance as pointer users. */
+.event-card:focus-within {
+  transform: translateY(-4px);
+  box-shadow: var(--fr-shadow-md);
+}
+
+.event-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--fr-space-xs);
+  flex-wrap: wrap;
+}
+
+.event-card__date {
+  font-size: var(--fr-text-xs);
+  font-weight: 700;
+  letter-spacing: var(--fr-tracking-caps);
+  text-transform: uppercase;
+  color: var(--fr-primary-strong);
+}
+
+.event-card__status {
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--fr-radius-full);
+  background: var(--fr-success-soft);
+  color: var(--fr-success);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.event-card__name {
+  font-size: var(--fr-text-h3);
+  margin-top: 0.25rem;
+}
+
+.event-card__name-link {
+  color: var(--fr-text);
+  text-decoration: none;
+}
+
+.event-card__name-link:hover {
+  color: var(--fr-primary-strong);
+}
+
+.event-card__venue {
+  font-size: var(--fr-text-sm);
+  color: var(--fr-text-soft);
+}
+
+.event-card__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--fr-space-xs);
+  flex-wrap: wrap;
+  margin-top: 0.35rem;
+  padding-top: 0.85rem;
+  border-top: 1px dashed var(--fr-border-strong);
+}
+
+.event-card__time {
+  font-size: var(--fr-text-xs);
+  color: var(--fr-text-muted);
+}
+
+.event-card__price {
+  font-size: var(--fr-text-sm);
+  font-weight: 700;
+  color: var(--fr-text);
+}
+
+.event-card__cta {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.35rem;
+  font-size: var(--fr-text-sm);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.event-card__cta:hover {
+  color: var(--fr-primary);
+}
+
+.event-card__cta span {
+  transition: transform var(--fr-dur-fast) var(--fr-ease);
+}
+
+.event-card__cta:hover span {
+  transform: translateX(3px);
+}
+
+/* --- Loading skeleton ------------------------------------------ */
+
+.event-card--skeleton {
+  pointer-events: none;
+}
+
+.event-card__line {
+  display: block;
+  border-radius: var(--fr-radius-sm);
+  background: var(--fr-surface-soft);
+  animation: fr-pulse-soft 1.6s ease-in-out infinite;
+}
+
+.event-card__line--chip {
+  width: 5.5rem;
+  height: 1.1rem;
+}
+
+.event-card__line--short {
+  width: 3.5rem;
+}
+
+.event-card__line--title {
+  width: 80%;
+  height: 1.4rem;
+  margin-top: 0.25rem;
+}
+
+.event-card__line--venue {
+  width: 55%;
+  height: 0.9rem;
+}
+
+.event-card__line--cta {
+  width: 6rem;
+  height: 0.9rem;
+  margin-top: 0.35rem;
+}

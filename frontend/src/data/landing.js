@@ -6,7 +6,7 @@
    ============================================================ */
 
 export const navLinks = [
-  { label: 'Events', href: '#' },
+  { label: 'Events', href: '/events' },
   { label: 'How it works', href: '#how-it-works' },
   { label: 'Features', href: '#features' },
 ]
@@ -103,7 +103,7 @@ export const features = [
 ]
 
 export const footerLinks = [
-  { label: 'Events', href: '#' },
+  { label: 'Events', href: '/events' },
   { label: 'How it works', href: '#how-it-works' },
   { label: 'Features', href: '#features' },
   {
