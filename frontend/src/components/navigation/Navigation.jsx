@@ -76,6 +76,17 @@ export default function Navigation() {
                 >
                   My bookings
                 </Link>
+                {/* Administration entry: administrators only, never
+                    shown to normal USER accounts or when anonymous. */}
+                {user?.role === 'ADMIN' && (
+                  <Link
+                    to="/admin/events"
+                    className="fr-btn fr-btn--ghost fr-btn--compact"
+                    onClick={closeMenu}
+                  >
+                    Manage events
+                  </Link>
+                )}
                 <span className="nav__user">Hi, {firstName}</span>
                 <Button variant="ghost" className="fr-btn--compact" onClick={handleSignOut}>
                   Sign out

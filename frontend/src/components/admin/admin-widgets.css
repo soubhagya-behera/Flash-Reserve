@@ -1,0 +1,84 @@
+/* ============================================================
+   FlashReserve — Admin widgets
+   Status badge, confirmation dialog and small shared form
+   details used by the admin components.
+   ============================================================ */
+
+/* --- Status badge ------------------------------------------------
+   Text always accompanies the dot color: status is never conveyed
+   by color alone. */
+
+.admin-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.28rem 0.8rem;
+  border-radius: var(--fr-radius-full);
+  font-size: var(--fr-text-xs);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.admin-badge__dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: var(--fr-radius-full);
+  background: currentColor;
+}
+
+.admin-badge--draft {
+  background: var(--fr-warning-soft);
+  color: var(--fr-warning);
+}
+
+.admin-badge--published {
+  background: var(--fr-success-soft);
+  color: var(--fr-success);
+}
+
+.admin-badge--cancelled {
+  background: var(--fr-danger-soft);
+  color: var(--fr-danger);
+}
+
+.admin-badge--completed {
+  background: var(--fr-primary-soft);
+  color: var(--fr-primary-strong);
+}
+
+/* --- Confirmation dialog ------------------------------------------ */
+
+.admin-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: var(--fr-space-md);
+}
+
+.admin-dialog__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(43, 28, 66, 0.4);
+  backdrop-filter: blur(2px);
+}
+
+.admin-dialog__panel {
+  position: relative;
+  width: min(26rem, 100%);
+  padding: var(--fr-space-lg) var(--fr-space-md) var(--fr-space-md);
+}
+
+.admin-dialog__message {
+  margin-top: var(--fr-space-xs);
+  color: var(--fr-text-soft);
+}
+
+.admin-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--fr-space-xs);
+  margin-top: var(--fr-space-md);
+  flex-wrap: wrap;
+}

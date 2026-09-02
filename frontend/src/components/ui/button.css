@@ -52,6 +52,18 @@
   transform: translateY(-1px);
 }
 
+/* Danger variant for destructive confirmations (admin flows). */
+.fr-btn--danger {
+  background-color: var(--fr-danger);
+  color: var(--fr-ink-on-brand);
+  box-shadow: var(--fr-shadow-sm);
+}
+
+.fr-btn--danger:hover {
+  background-color: #b73250;
+  transform: translateY(-1px);
+}
+
 /* Compact variant for the navigation bar. */
 .fr-btn--compact {
   padding: 0.5rem 1.05rem;

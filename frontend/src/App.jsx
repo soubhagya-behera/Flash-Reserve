@@ -8,7 +8,11 @@ import EventDetailPage from './pages/EventDetailPage.jsx'
 import BookingsPage from './pages/BookingsPage.jsx'
 import BookingDetailPage from './pages/BookingDetailPage.jsx'
 import DashboardPage from './pages/DashboardPage.jsx'
+import AdminEventsPage from './pages/admin/AdminEventsPage.jsx'
+import AdminEventDetailPage from './pages/admin/AdminEventDetailPage.jsx'
+import AdminEventFormPage from './pages/admin/AdminEventFormPage.jsx'
 import RequireAuth from './auth/RequireAuth.jsx'
+import RequireAdmin from './auth/RequireAdmin.jsx'
 
 function App() {
   return (
@@ -39,6 +43,40 @@ function App() {
             <RequireAuth>
               <DashboardPage />
             </RequireAuth>
+          }
+        />
+        {/* Admin area: authentication + ROLE_ADMIN required. "new"
+            must match before :eventId so it is not read as an id. */}
+        <Route
+          path="/admin/events"
+          element={
+            <RequireAdmin>
+              <AdminEventsPage />
+            </RequireAdmin>
+          }
+        />
+        <Route
+          path="/admin/events/new"
+          element={
+            <RequireAdmin>
+              <AdminEventFormPage />
+            </RequireAdmin>
+          }
+        />
+        <Route
+          path="/admin/events/:eventId/edit"
+          element={
+            <RequireAdmin>
+              <AdminEventFormPage />
+            </RequireAdmin>
+          }
+        />
+        <Route
+          path="/admin/events/:eventId"
+          element={
+            <RequireAdmin>
+              <AdminEventDetailPage />
+            </RequireAdmin>
           }
         />
         <Route path="/login" element={<LoginPage />} />

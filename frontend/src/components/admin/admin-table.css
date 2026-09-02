@@ -1,0 +1,152 @@
+/* ============================================================
+   FlashReserve — Admin event table
+   Styles for the management table (and its action chips) that
+   collapse into labelled cards on small screens. Styles travel
+   with the AdminEventTable component.
+   ============================================================ */
+
+.admin-table-wrap {
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fr-text-sm);
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 0.85rem 0.9rem;
+  text-align: left;
+  border-bottom: 1px solid var(--fr-border);
+  vertical-align: top;
+}
+
+.admin-table thead th {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: var(--fr-tracking-caps);
+  text-transform: uppercase;
+  color: var(--fr-text-muted);
+  white-space: nowrap;
+}
+
+.admin-table tbody tr:last-child th,
+.admin-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-table tbody tr {
+  transition: background-color var(--fr-dur-fast) var(--fr-ease);
+}
+
+.admin-table tbody tr:hover {
+  background: var(--fr-surface-soft);
+}
+
+.admin-table__name {
+  font-family: var(--fr-font-display);
+  font-size: var(--fr-text-md);
+  font-weight: 600;
+  color: var(--fr-text);
+  text-decoration: none;
+}
+
+.admin-table__name:hover {
+  color: var(--fr-primary-strong);
+  text-decoration: underline;
+}
+
+.admin-table__actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.admin-table__action {
+  padding: 0.3rem 0.75rem;
+  border: 1px solid var(--fr-border-strong);
+  border-radius: var(--fr-radius-full);
+  background: var(--fr-surface);
+  color: var(--fr-text-soft);
+  font-size: var(--fr-text-xs);
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    border-color var(--fr-dur-fast) var(--fr-ease),
+    color var(--fr-dur-fast) var(--fr-ease),
+    background-color var(--fr-dur-fast) var(--fr-ease);
+}
+
+.admin-table__action:hover {
+  border-color: var(--fr-primary);
+  color: var(--fr-primary-strong);
+}
+
+.admin-table__action--primary {
+  border-color: transparent;
+  background-image: var(--fr-gradient-brand);
+  color: var(--fr-ink-on-brand);
+}
+
+.admin-table__action--danger:hover {
+  border-color: var(--fr-danger);
+  color: var(--fr-danger);
+}
+
+/* --- Mobile: the table becomes stacked, labelled cards ---------- */
+
+@media (max-width: 760px) {
+  .admin-table thead {
+    display: none;
+  }
+
+  .admin-table,
+  .admin-table tbody,
+  .admin-table tr,
+  .admin-table th,
+  .admin-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .admin-table tbody tr {
+    padding: var(--fr-space-sm) var(--fr-space-2xs);
+    border-bottom: 1px solid var(--fr-border);
+  }
+
+  .admin-table tbody tr:last-child {
+    border-bottom: none;
+  }
+
+  .admin-table th,
+  .admin-table td {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--fr-space-sm);
+    padding: 0.45rem 0.6rem;
+    border-bottom: none;
+  }
+
+  .admin-table th::before,
+  .admin-table td::before {
+    content: attr(data-label);
+    flex-shrink: 0;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: var(--fr-tracking-caps);
+    text-transform: uppercase;
+    color: var(--fr-text-muted);
+  }
+
+  .admin-table__name::before {
+    content: '' !important;
+  }
+
+  .admin-table__actions {
+    justify-content: flex-end;
+  }
+}

@@ -1,0 +1,265 @@
+/* ============================================================
+   FlashReserve — Admin area (pages)
+   Same tokens, surfaces and motion as the rest of the product;
+   a calm SaaS-style management layer on top. Fluid grids, no
+   horizontal overflow, single-column forms on mobile.
+   ============================================================ */
+
+.admin {
+  padding-block: clamp(3rem, 7vw, 5rem) var(--fr-section);
+  min-height: 70vh;
+}
+
+/* --- Header --------------------------------------------------- */
+
+.admin__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--fr-space-md);
+  flex-wrap: wrap;
+  max-width: none;
+  margin-bottom: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+.admin__eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: var(--fr-tracking-caps);
+  text-transform: uppercase;
+  color: var(--fr-accent);
+}
+
+.admin__title {
+  margin-top: var(--fr-space-sm);
+}
+
+.admin__lead {
+  margin-top: var(--fr-space-sm);
+  color: var(--fr-text-soft);
+  max-width: var(--fr-measure);
+}
+
+.admin__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: var(--fr-space-md);
+  font-size: var(--fr-text-sm);
+  font-weight: 600;
+  color: var(--fr-primary-strong);
+  text-decoration: none;
+}
+
+.admin__back:hover {
+  text-decoration: underline;
+}
+
+/* --- Toolbar: filters + count ---------------------------------- */
+
+.admin__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--fr-space-sm);
+  flex-wrap: wrap;
+  margin-bottom: var(--fr-space-md);
+}
+
+.admin__filters {
+  display: flex;
+  gap: var(--fr-space-2xs);
+  flex-wrap: wrap;
+}
+
+.admin__filter {
+  padding: 0.45rem 1rem;
+  border: 1px solid var(--fr-border-strong);
+  border-radius: var(--fr-radius-full);
+  background: var(--fr-surface);
+  color: var(--fr-text-soft);
+  font-family: var(--fr-font-body);
+  font-size: var(--fr-text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color var(--fr-dur-fast) var(--fr-ease),
+    border-color var(--fr-dur-fast) var(--fr-ease),
+    color var(--fr-dur-fast) var(--fr-ease);
+}
+
+.admin__filter:hover {
+  border-color: var(--fr-primary);
+  color: var(--fr-primary-strong);
+}
+
+.admin__filter--active {
+  background-image: var(--fr-gradient-brand);
+  border-color: transparent;
+  color: var(--fr-ink-on-brand);
+  box-shadow: var(--fr-shadow-glow);
+}
+
+.admin__count {
+  color: var(--fr-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Forms & detail ---------------------------------------------- */
+
+.admin-form-container,
+.admin-detail-container {
+  max-width: 44rem;
+}
+
+.admin-form-card {
+  padding: clamp(1.5rem, 4vw, 2.25rem);
+}
+
+.admin-form {
+  display: grid;
+  gap: var(--fr-space-md);
+}
+
+.admin-form .fr-btn {
+  justify-self: start;
+}
+
+.admin-form__readonly {
+  margin: 0;
+  padding: 0.7rem 0.95rem;
+  border: 1px dashed var(--fr-border-strong);
+  border-radius: var(--fr-radius-md);
+  background: var(--fr-surface-soft);
+  color: var(--fr-text-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-form__note {
+  margin-top: 0.35rem;
+  color: var(--fr-text-muted);
+}
+
+.admin-form__skeleton {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.admin-form__skeleton-line {
+  display: block;
+  height: 2.4rem;
+  border-radius: var(--fr-radius-sm);
+  background: var(--fr-surface-soft);
+  animation: fr-pulse-soft 1.6s ease-in-out infinite;
+}
+
+.admin-detail-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--fr-space-md);
+  flex-wrap: wrap;
+  margin-bottom: var(--fr-space-lg);
+}
+
+.admin-detail-title {
+  margin-top: var(--fr-space-sm);
+}
+
+.admin-detail-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--fr-space-sm);
+  flex-wrap: wrap;
+  margin-top: var(--fr-space-sm);
+}
+
+.admin-detail-actions {
+  display: flex;
+  gap: var(--fr-space-xs);
+  flex-wrap: wrap;
+}
+
+.admin-detail-card {
+  padding: clamp(1.5rem, 4vw, 2.25rem);
+}
+
+.admin-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--fr-space-md) var(--fr-gap-card);
+  margin: 0;
+}
+
+.admin-detail-field dt {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: var(--fr-tracking-caps);
+  text-transform: uppercase;
+  color: var(--fr-text-muted);
+}
+
+.admin-detail-field dd {
+  margin: 0.3rem 0 0;
+  color: var(--fr-text);
+}
+
+.admin-detail-field--wide {
+  grid-column: 1 / -1;
+}
+
+.admin-detail-field--mono code {
+  font-size: var(--fr-text-xs);
+  color: var(--fr-text-soft);
+  word-break: break-all;
+}
+
+/* --- Shared states & utilities ----------------------------------- */
+
+.admin__state {
+  display: grid;
+  gap: var(--fr-space-sm);
+  justify-items: center;
+  max-width: 34rem;
+  margin-inline: auto;
+  padding: clamp(2.5rem, 6vw, 4rem) var(--fr-space-md);
+  text-align: center;
+}
+
+.admin__state--denied {
+  margin-top: clamp(1rem, 3vw, 2rem);
+}
+
+.admin__state-detail {
+  max-width: 26rem;
+}
+
+.admin__pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--fr-space-sm);
+  margin-top: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+.admin__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --- Responsive collapse -------------------------------------------
+   Tablet (~900px): detail grid collapses to one column. The event
+   table has its own mobile rules in components/admin/admin-table.css. */
+
+@media (max-width: 900px) {
+  .admin-detail-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
