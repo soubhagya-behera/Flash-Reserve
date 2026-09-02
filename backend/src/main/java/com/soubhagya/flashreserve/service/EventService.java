@@ -38,6 +38,29 @@ public class EventService {
 				.orElseThrow(() -> new ResourceNotFoundException("Event not found: " + id));
 	}
 
+	/**
+	 * Returns every event (DRAFT, PUBLISHED, CANCELLED or COMPLETED) for the
+	 * ADMIN catalog, optionally narrowed to one status, using the standard
+	 * Spring pagination conventions ({@code page}, {@code size}, {@code sort}).
+	 * Unlike the public catalog this never filters by status implicitly, so an
+	 * admin can see drafts and cancelled events while the public API stays
+	 * PUBLISHED-only.
+	 */
+	public Page<Event> getEvents(EventStatus status, Pageable pageable) {
+		if (status == null) {
+			return eventRepository.findAll(pageable);
+		}
+		return eventRepository.findByStatus(status, pageable);
+	}
+
+	/**
+	 * Returns one event by id regardless of its status. Unknown ids throw
+	 * {@link ResourceNotFoundException}, indistinguishable from the public path.
+	 */
+	public Event getEventById(UUID id) {
+		return getById(id);
+	}
+
 	public Page<Event> getPublishedEvents(Pageable pageable) {
 		return eventRepository.findByStatus(EventStatus.PUBLISHED, pageable);
 	}

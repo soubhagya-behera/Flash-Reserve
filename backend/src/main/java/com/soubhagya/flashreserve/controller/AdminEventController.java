@@ -7,6 +7,7 @@ import com.soubhagya.flashreserve.dto.event.CreateEventRequest;
 import com.soubhagya.flashreserve.dto.error.ApiError;
 import com.soubhagya.flashreserve.dto.event.EventResponse;
 import com.soubhagya.flashreserve.dto.event.UpdateEventRequest;
+import com.soubhagya.flashreserve.entity.enums.EventStatus;
 import com.soubhagya.flashreserve.service.EventService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,15 +18,22 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.PagedModel;
+
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
@@ -103,6 +111,42 @@ public class AdminEventController {
 	})
 	EventResponse cancel(@PathVariable UUID eventId) {
 		return eventService.cancel(eventId);
+	}
+
+	@GetMapping
+	@Operation(summary = "List all events (any status, optionally filtered)",
+			description = """
+					Admin catalog of every event regardless of status: DRAFT, PUBLISHED, \
+					CANCELLED or COMPLETED. Supports standard Spring pagination parameters \
+					(page, size, sort) and an optional status query parameter to narrow the \
+					list. Response is a Spring PagedModel wrapper.""")
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", description = "Page of events (optionally filtered by status)"),
+			@ApiResponse(responseCode = "400", description = "Invalid pagination/sort parameter or unknown status filter value", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ApiError.class))),
+			@ApiResponse(responseCode = "401", description = "Missing, invalid or expired JWT", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ApiError.class))),
+			@ApiResponse(responseCode = "403", description = "Authenticated but without the ADMIN role")
+	})
+	PagedModel<EventResponse> list(@RequestParam(required = false) EventStatus status,
+			@PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+		return new PagedModel<>(
+				eventService.getEvents(status, pageable).map(EventResponse::from));
+	}
+
+	@GetMapping("/{eventId}")
+	@Operation(summary = "Get one event by id (any status)",
+			description = """
+					Admin detail view of a single event regardless of its status. Unlike \
+					the public endpoint this returns DRAFT, PUBLISHED, CANCELLED and \
+					COMPLETED events; unknown ids return 404.""")
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", description = "Event found (any status)"),
+			@ApiResponse(responseCode = "400", description = "eventId is not a valid UUID", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ApiError.class))),
+			@ApiResponse(responseCode = "401", description = "Missing, invalid or expired JWT", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ApiError.class))),
+			@ApiResponse(responseCode = "403", description = "Authenticated but without the ADMIN role"),
+			@ApiResponse(responseCode = "404", description = "Event not found")
+	})
+	EventResponse get(@PathVariable UUID eventId) {
+		return EventResponse.from(eventService.getEventById(eventId));
 	}
 
 }
