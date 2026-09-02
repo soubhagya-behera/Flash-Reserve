@@ -63,6 +63,13 @@ export default function Navigation() {
             {isAuthenticated ? (
               <>
                 <Link
+                  to="/dashboard"
+                  className="fr-btn fr-btn--ghost fr-btn--compact"
+                  onClick={closeMenu}
+                >
+                  Dashboard
+                </Link>
+                <Link
                   to="/bookings"
                   className="fr-btn fr-btn--ghost fr-btn--compact"
                   onClick={closeMenu}

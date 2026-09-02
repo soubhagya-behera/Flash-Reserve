@@ -1,0 +1,340 @@
+/* ============================================================
+   FlashReserve — User dashboard
+   The authenticated home: a warm greeting row, a truthful
+   overview row, prominent pending-payment cards and calm
+   booking streams. Same tokens, surfaces and motion as the
+   rest of the product; fluid grids, no horizontal overflow.
+   ============================================================ */
+
+.dashboard {
+  padding-block: clamp(3rem, 7vw, 5rem) var(--fr-section);
+}
+
+/* --- Header --------------------------------------------------- */
+
+.dashboard__header {
+  max-width: 38rem;
+  margin-bottom: clamp(2rem, 4vw, 3rem);
+}
+
+.dashboard__eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: var(--fr-tracking-caps);
+  text-transform: uppercase;
+  color: var(--fr-accent);
+}
+
+.dashboard__title {
+  margin-top: var(--fr-space-sm);
+}
+
+.dashboard__lead {
+  margin-top: var(--fr-space-sm);
+  color: var(--fr-text-soft);
+}
+
+/* --- Overview cards --------------------------------------------- */
+
+.overview {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--fr-gap-card);
+  margin-bottom: clamp(2rem, 4vw, 3rem);
+}
+
+.overview__card {
+  display: grid;
+  gap: 0.2rem;
+  align-content: start;
+  padding: var(--fr-space-md);
+  text-decoration: none;
+  transition:
+    transform var(--fr-dur) var(--fr-ease),
+    box-shadow var(--fr-dur) var(--fr-ease);
+}
+
+.overview__card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--fr-shadow-md);
+}
+
+.overview__value {
+  font-family: var(--fr-font-display);
+  font-size: var(--fr-text-h2);
+  line-height: 1.1;
+  color: var(--fr-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.overview__card--pending .overview__value {
+  color: var(--fr-warning);
+}
+
+.overview__card--confirmed .overview__value {
+  color: var(--fr-success);
+}
+
+.overview__label {
+  font-size: var(--fr-text-sm);
+  font-weight: 700;
+  color: var(--fr-text-soft);
+}
+
+.overview__detail {
+  color: var(--fr-text-muted);
+}
+
+.overview__value-skeleton {
+  display: block;
+  width: 3rem;
+  height: 1.9rem;
+  border-radius: var(--fr-radius-sm);
+  background: var(--fr-surface-soft);
+  animation: fr-pulse-soft 1.6s ease-in-out infinite;
+}
+
+.overview__label-skeleton {
+  display: block;
+  width: 60%;
+  height: 0.85rem;
+  margin-top: 0.4rem;
+  border-radius: var(--fr-radius-sm);
+  background: var(--fr-surface-soft);
+  animation: fr-pulse-soft 1.6s ease-in-out infinite;
+}
+
+/* --- Sections ----------------------------------------------------- */
+
+.dashboard__section {
+  margin-top: clamp(2.25rem, 5vw, 3.5rem);
+}
+
+.dashboard__section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--fr-space-sm);
+  flex-wrap: wrap;
+}
+
+.dashboard__section-lead {
+  margin-top: var(--fr-space-2xs);
+  color: var(--fr-text-soft);
+  max-width: var(--fr-measure);
+}
+
+.dashboard__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: var(--fr-text-sm);
+  font-weight: 600;
+  color: var(--fr-primary-strong);
+  text-decoration: none;
+}
+
+.dashboard__link:hover {
+  text-decoration: underline;
+}
+
+.dashboard__pending-grid,
+.dashboard__upcoming-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));
+  gap: var(--fr-gap-card);
+  margin-top: var(--fr-space-md);
+}
+
+.dashboard__upcoming-grid {
+  max-width: 56rem;
+}
+
+.dashboard__recent-list {
+  display: grid;
+  gap: var(--fr-gap-card);
+  margin-top: var(--fr-space-md);
+  max-width: 42rem;
+
+/* --- Pending payment card ---------------------------------------- */
+
+.pending-card {
+  display: grid;
+  gap: 0.55rem;
+  align-content: start;
+  padding: var(--fr-space-md);
+}
+
+.pending-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--fr-space-xs);
+  flex-wrap: wrap;
+}
+
+.pending-card__label {
+  padding: 0.25rem 0.7rem;
+  border-radius: var(--fr-radius-full);
+  font-size: var(--fr-text-xs);
+  font-weight: 700;
+  letter-spacing: var(--fr-tracking-caps);
+  background: var(--fr-warning-soft);
+  color: var(--fr-warning);
+}
+
+.pending-card__seat {
+  font-size: var(--fr-text-xs);
+  font-weight: 700;
+  color: var(--fr-primary-strong);
+  background: var(--fr-primary-soft);
+  padding: 0.25rem 0.7rem;
+  border-radius: var(--fr-radius-full);
+}
+
+.pending-card__event {
+  font-family: var(--fr-font-display);
+  font-size: var(--fr-text-h3);
+  line-height: var(--fr-leading-heading);
+}
+
+.pending-card__event-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.pending-card__event-link:hover {
+  color: var(--fr-primary-strong);
+}
+
+.pending-card__venue {
+  color: var(--fr-text-soft);
+}
+
+.pending-card__when {
+  font-size: var(--fr-text-sm);
+  color: var(--fr-text-muted);
+}
+
+.pending-card__countdown {
+  margin-top: 0.3rem;
+  padding-top: 0.6rem;
+  border-top: 1px dashed var(--fr-border-strong);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fr-text-md);
+  color: var(--fr-info);
+}
+
+.pending-card__countdown strong {
+  font-weight: 700;
+  font-size: var(--fr-text-h3);
+}
+
+.pending-card .fr-btn {
+  justify-self: start;
+}
+
+.pending-card .fr-alert {
+  width: 100%;
+}
+
+.pending-card__expired {
+  margin: 0;
+  color: var(--fr-text-soft);
+}
+
+
+/* --- Explore row --------------------------------------------------- */
+
+.dashboard__explore {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--fr-space-xs);
+  margin-top: clamp(2.25rem, 5vw, 3.5rem);
+}
+
+/* --- Shared state panels & skeleton -------------------------------- */
+
+.dashboard__state {
+  display: grid;
+  gap: var(--fr-space-sm);
+  justify-items: center;
+  max-width: 34rem;
+  margin-inline: auto;
+  padding: clamp(2.5rem, 6vw, 4rem) var(--fr-space-md);
+  text-align: center;
+}
+
+.dashboard__state-detail {
+  max-width: 26rem;
+}
+
+.dashboard__skeleton {
+  display: grid;
+  gap: 0.6rem;
+  padding: var(--fr-space-md);
+}
+
+.dashboard__line {
+  display: block;
+  border-radius: var(--fr-radius-sm);
+  background: var(--fr-surface-soft);
+  animation: fr-pulse-soft 1.6s ease-in-out infinite;
+}
+
+.dashboard__line--chip {
+  width: 7rem;
+  height: 1.3rem;
+}
+
+.dashboard__line--title {
+  width: 70%;
+  height: 1.4rem;
+}
+
+.dashboard__line--meta {
+  width: 55%;
+  height: 0.85rem;
+}
+
+.dashboard__line--short {
+  width: 35%;
+}
+
+/* --- Screen-reader-only status --------------------------------------- */
+
+.dashboard__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --- Responsive collapse ---------------------------------------------
+   Desktop: 4-up overview, side-by-side feature cards.
+   Tablet (~768px): overview 2-up, cards keep readable width.
+   Mobile (~390px): everything single column, no horizontal scroll. */
+
+@media (max-width: 1024px) {
+  .overview {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .overview {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dashboard__section-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+}

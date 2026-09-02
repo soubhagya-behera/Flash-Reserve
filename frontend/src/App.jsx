@@ -7,6 +7,8 @@ import EventsPage from './pages/EventsPage.jsx'
 import EventDetailPage from './pages/EventDetailPage.jsx'
 import BookingsPage from './pages/BookingsPage.jsx'
 import BookingDetailPage from './pages/BookingDetailPage.jsx'
+import DashboardPage from './pages/DashboardPage.jsx'
+import RequireAuth from './auth/RequireAuth.jsx'
 
 function App() {
   return (
@@ -31,6 +33,14 @@ function App() {
         <Route path="/events/:eventId" element={<EventDetailPage />} />
         <Route path="/bookings" element={<BookingsPage />} />
         <Route path="/bookings/:bookingId" element={<BookingDetailPage />} />
+        <Route
+          path="/dashboard"
+          element={
+            <RequireAuth>
+              <DashboardPage />
+            </RequireAuth>
+          }
+        />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
