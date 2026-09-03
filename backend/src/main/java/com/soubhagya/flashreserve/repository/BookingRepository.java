@@ -43,6 +43,33 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
 	Optional<Booking> findByIdAndUserId(UUID id, UUID userId);
 
 	/**
+	 * ADMIN catalog queries: event, seat and booker are fetched in the same
+	 * statement so a page of admin bookings never triggers per-row lazy
+	 * loads. Filter combinations map to dedicated derived queries, each
+	 * backed by an existing bookings index.
+	 */
+	@Override
+	@EntityGraph(attributePaths = { "event", "seat", "user" })
+	Page<Booking> findAll(Pageable pageable);
+
+	@EntityGraph(attributePaths = { "event", "seat", "user" })
+	Page<Booking> findByStatus(BookingStatus status, Pageable pageable);
+
+	@EntityGraph(attributePaths = { "event", "seat", "user" })
+	Page<Booking> findByEventId(UUID eventId, Pageable pageable);
+
+	@EntityGraph(attributePaths = { "event", "seat", "user" })
+	Page<Booking> findByEventIdAndStatus(UUID eventId, BookingStatus status, Pageable pageable);
+
+	/**
+	 * ADMIN detail lookup: one booking with its event, seat and booker
+	 * resolved eagerly, regardless of status or owner.
+	 */
+	@Override
+	@EntityGraph(attributePaths = { "event", "seat", "user" })
+	Optional<Booking> findById(UUID id);
+
+	/**
 	 * ID-only projection for the expiration scan: the job needs identifiers
 	 * only, so loading full Booking entities (each pulling lazy associations)
 	 * would be wasted work. Uses the existing ix_bookings_expires_at index.

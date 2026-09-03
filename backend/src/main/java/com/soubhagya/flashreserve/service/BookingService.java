@@ -179,4 +179,35 @@ public class BookingService {
 				&& booking.getExpiresAt().isBefore(Instant.now());
 	}
 
+	/**
+	 * ADMIN booking catalog: every booking regardless of status or owner,
+	 * optionally narrowed by status and/or event. Each filter combination
+	 * maps to a dedicated derived query so every path stays indexed and
+	 * paged. Unknown event ids simply yield an empty page.
+	 */
+	@Transactional(readOnly = true)
+	public Page<Booking> getBookingsForAdmin(BookingStatus status, UUID eventId, Pageable pageable) {
+		if (eventId != null && status != null) {
+			return bookingRepository.findByEventIdAndStatus(eventId, status, pageable);
+		}
+		if (eventId != null) {
+			return bookingRepository.findByEventId(eventId, pageable);
+		}
+		if (status != null) {
+			return bookingRepository.findByStatus(status, pageable);
+		}
+		return bookingRepository.findAll(pageable);
+	}
+
+	/**
+	 * One booking for the ADMIN detail view, any status and any owner.
+	 * Unknown ids throw {@link ResourceNotFoundException}, indistinguishable
+	 * from the owner-scoped path.
+	 */
+	@Transactional(readOnly = true)
+	public Booking getBookingForAdmin(UUID bookingId) {
+		return bookingRepository.findById(bookingId)
+				.orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + bookingId));
+	}
+
 }
