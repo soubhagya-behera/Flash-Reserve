@@ -40,3 +40,30 @@ export function cancelBooking(bookingId, { signal } = {}) {
     { method: 'POST', signal },
   )
 }
+
+/* ============================================================
+   Admin endpoints (ROLE_ADMIN required by the backend).
+   Read-only view over every booking regardless of owner.
+   ============================================================ */
+
+/**
+ * Lists every booking for administration, optionally narrowed by
+ * status (PENDING | CONFIRMED | EXPIRED | CANCELLED) and/or a
+ * specific event. Backend answer is a Spring PagedModel, newest
+ * bookings first (createdAt descending).
+ */
+export function listAdminBookings({ status, eventId, page = 0, size = 10, signal } = {}) {
+  const query = new URLSearchParams({ page: String(page), size: String(size) })
+  if (status) query.set('status', status)
+  if (eventId) query.set('eventId', eventId)
+  return apiRequest(`/api/admin/bookings?${query.toString()}`, { signal })
+}
+
+/**
+ * Fetches one booking by UUID with its event, seat, booker identity
+ * and nullable payment summary. 404 for unknown ids, 400 for a
+ * malformed UUID.
+ */
+export function getAdminBooking(bookingId, { signal } = {}) {
+  return apiRequest(`/api/admin/bookings/${encodeURIComponent(bookingId)}`, { signal })
+}

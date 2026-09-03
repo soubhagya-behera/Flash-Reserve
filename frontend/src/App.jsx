@@ -11,6 +11,8 @@ import DashboardPage from './pages/DashboardPage.jsx'
 import AdminEventsPage from './pages/admin/AdminEventsPage.jsx'
 import AdminEventDetailPage from './pages/admin/AdminEventDetailPage.jsx'
 import AdminEventFormPage from './pages/admin/AdminEventFormPage.jsx'
+import AdminBookingsPage from './pages/admin/AdminBookingsPage.jsx'
+import AdminBookingDetailPage from './pages/admin/AdminBookingDetailPage.jsx'
 import RequireAuth from './auth/RequireAuth.jsx'
 import RequireAdmin from './auth/RequireAdmin.jsx'
 
@@ -76,6 +78,23 @@ function App() {
           element={
             <RequireAdmin>
               <AdminEventDetailPage />
+            </RequireAdmin>
+          }
+        />
+        {/* Admin booking area: read-only catalog and detail view. */}
+        <Route
+          path="/admin/bookings"
+          element={
+            <RequireAdmin>
+              <AdminBookingsPage />
+            </RequireAdmin>
+          }
+        />
+        <Route
+          path="/admin/bookings/:bookingId"
+          element={
+            <RequireAdmin>
+              <AdminBookingDetailPage />
             </RequireAdmin>
           }
         />

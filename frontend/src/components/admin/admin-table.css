@@ -58,6 +58,26 @@
   text-decoration: underline;
 }
 
+/* Booking rows: the booking id doubles as the row link, and some
+   cells (booker email) carry a quieter secondary line. */
+.admin-table__id {
+  font-family: var(--fr-font-body);
+  font-size: var(--fr-text-xs);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.admin-table__sub {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: var(--fr-text-xs);
+  color: var(--fr-text-muted);
+}
+
+.admin-table__none {
+  color: var(--fr-text-muted);
+}
+
 .admin-table__actions {
   display: flex;
   gap: 0.4rem;

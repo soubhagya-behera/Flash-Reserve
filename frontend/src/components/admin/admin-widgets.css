@@ -46,6 +46,21 @@
   color: var(--fr-primary-strong);
 }
 
+.admin-badge--pending {
+  background: var(--fr-warning-soft);
+  color: var(--fr-warning);
+}
+
+.admin-badge--confirmed {
+  background: var(--fr-success-soft);
+  color: var(--fr-success);
+}
+
+.admin-badge--expired {
+  background: var(--fr-surface-soft);
+  color: var(--fr-text-muted);
+}
+
 /* --- Confirmation dialog ------------------------------------------ */
 
 .admin-dialog {

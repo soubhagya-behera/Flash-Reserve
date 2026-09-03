@@ -105,6 +105,36 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Event selector in the bookings toolbar; mirrors the filter chips. */
+.admin__event-filter {
+  display: flex;
+  align-items: center;
+  gap: var(--fr-space-2xs);
+}
+
+.admin__event-filter label {
+  font-size: var(--fr-text-sm);
+  font-weight: 600;
+  color: var(--fr-text-soft);
+}
+
+.admin__event-select {
+  max-width: 16rem;
+  padding: 0.45rem 2rem 0.45rem 0.9rem;
+  border: 1px solid var(--fr-border-strong);
+  border-radius: var(--fr-radius-md);
+  background-color: var(--fr-surface);
+  color: var(--fr-text);
+  font-family: var(--fr-font-body);
+  font-size: var(--fr-text-sm);
+  cursor: pointer;
+}
+
+.admin__event-select:focus-visible {
+  outline: 2px solid var(--fr-primary);
+  outline-offset: 1px;
+}
+
 /* --- Forms & detail ---------------------------------------------- */
 
 .admin-form-container,
