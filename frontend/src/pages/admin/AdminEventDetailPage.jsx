@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useParams } from 'react-router-dom'
 import ConfirmDialog from '../../components/admin/ConfirmDialog.jsx'
 import StatusBadge from '../../components/admin/StatusBadge.jsx'
 import useEventAction from '../../components/admin/useEventAction.js'
