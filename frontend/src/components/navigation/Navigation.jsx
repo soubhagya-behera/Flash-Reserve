@@ -62,20 +62,27 @@ export default function Navigation() {
           <div className="nav__actions">
             {isAuthenticated ? (
               <>
-                <Link
-                  to="/dashboard"
-                  className="fr-btn fr-btn--ghost fr-btn--compact"
-                  onClick={closeMenu}
-                >
-                  Dashboard
-                </Link>
-                <Link
-                  to="/bookings"
-                  className="fr-btn fr-btn--ghost fr-btn--compact"
-                  onClick={closeMenu}
-                >
-                  My bookings
-                </Link>
+                {/* USER-scoped area links: the backend reserves /dashboard
+                    and /bookings for USER accounts, so administrators get
+                    the admin links below instead of these. */}
+                {user?.role !== 'ADMIN' && (
+                  <>
+                    <Link
+                      to="/dashboard"
+                      className="fr-btn fr-btn--ghost fr-btn--compact"
+                      onClick={closeMenu}
+                    >
+                      Dashboard
+                    </Link>
+                    <Link
+                      to="/bookings"
+                      className="fr-btn fr-btn--ghost fr-btn--compact"
+                      onClick={closeMenu}
+                    >
+                      My bookings
+                    </Link>
+                  </>
+                )}
                 {/* Administration entries: administrators only, never
                     shown to normal USER accounts or when anonymous. */}
                 {user?.role === 'ADMIN' && (
