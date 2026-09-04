@@ -12,6 +12,7 @@ import javax.crypto.spec.SecretKeySpec;
 import com.razorpay.Order;
 import com.razorpay.RazorpayClient;
 import com.razorpay.RazorpayException;
+import com.razorpay.Refund;
 import com.soubhagya.flashreserve.config.RazorpayProperties;
 import com.soubhagya.flashreserve.exception.ServiceUnavailableException;
 
@@ -60,6 +61,26 @@ public class RazorpayPaymentProvider implements PaymentProvider {
 		catch (RazorpayException ex) {
 			log.error("Failed to create Razorpay order for receipt {}", paymentReference);
 			throw new ServiceUnavailableException("Payment provider unavailable. Please retry.");
+		}
+	}
+
+	@Override
+	public String refundPayment(String razorpayPaymentId, BigDecimal amount) {
+		ensureConfigured();
+		long paise = amount.movePointRight(2).setScale(0, RoundingMode.HALF_UP).longValueExact();
+
+		JSONObject refundRequest = new JSONObject();
+		refundRequest.put("amount", paise);
+		refundRequest.put("speed", "normal");
+
+		try {
+			RazorpayClient client = client();
+			Refund refund = client.payments.refund(razorpayPaymentId, refundRequest);
+			return refund.get("id");
+		}
+		catch (RazorpayException ex) {
+			log.error("Failed to create Razorpay refund for payment {}", razorpayPaymentId);
+			throw new ServiceUnavailableException("Refund could not be processed. Please retry.");
 		}
 	}
 

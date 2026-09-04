@@ -74,18 +74,22 @@ public class BookingController {
 	}
 
 	@PostMapping("/{bookingId}/cancel")
-	@Operation(summary = "Cancel a PENDING booking and release the seat",
+	@Operation(summary = "Cancel one of the caller's bookings",
 			description = """
-				Cancels one of the caller's PENDING bookings and releases its seat \
-				(HELD back to AVAILABLE) in a single transaction. Cancelled or \
-				confirmed bookings cannot be cancelled. The seat's optimistic lock \
-				arbitrates against a concurrent hold expiration, so the seat state \
-				stays consistent.""")
+				PENDING bookings are cancelled and their seat released (HELD back \
+				to AVAILABLE) in a single transaction. CONFIRMED paid bookings are \
+				refunded first: the Razorpay refund is requested before any local \
+				state changes, and only an accepted refund moves Payment to \
+				REFUNDED, Booking to CANCELLED and the seat to AVAILABLE. \
+				Cancellation is rejected after the event has started and for \
+				EXPIRED or already-CANCELLED bookings. The seat's optimistic \
+				lock arbitrates against concurrent writers.""")
 	@ApiResponses({
-			@ApiResponse(responseCode = "200", description = "Booking CANCELLED and seat released"),
+			@ApiResponse(responseCode = "200", description = "Booking CANCELLED (PENDING: seat released; CONFIRMED: payment fully refunded first)"),
 			@ApiResponse(responseCode = "401", description = "Missing, invalid or expired JWT", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ApiError.class))),
 			@ApiResponse(responseCode = "404", description = "Booking not found or owned by a different user"),
-			@ApiResponse(responseCode = "409", description = "Booking is not PENDING, or the seat was changed concurrently (e.g. expired or paid)")
+			@ApiResponse(responseCode = "409", description = "Booking is not cancellable (EXPIRED, CANCELLED, after event start, or no successful payment to refund), or the seat was changed concurrently"),
+			@ApiResponse(responseCode = "503", description = "The payment provider rejected or could not process the refund; nothing was cancelled")
 	})
 	BookingResponse cancel(@AuthenticationPrincipal UserPrincipal principal, @PathVariable UUID bookingId) {
 		return BookingResponse.from(bookingService.cancelBooking(bookingId, principal.id()));

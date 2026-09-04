@@ -1,6 +1,7 @@
 package com.soubhagya.flashreserve.service;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -41,6 +42,8 @@ public class PaymentService {
 	private final SeatRepository seatRepository;
 
 	private final PaymentProvider paymentProvider;
+
+	private final ReservationLockService reservationLockService;
 
 	private final TransactionTemplate transactionTemplate;
 
@@ -219,6 +222,99 @@ public class PaymentService {
 		Payment payment = paymentRepository.findById(paymentId).orElseThrow();
 		payment.setStatus(PaymentStatus.FAILED);
 		return confirmationOf(bookingId);
+	}
+
+	/**
+	 * Cancels a CONFIRMED paid booking with a full refund. The Razorpay
+	 * refund is requested FIRST, outside any database transaction, and only
+	 * after the provider accepts it do the local state changes (Payment
+	 * REFUNDED + refund reference, Booking CANCELLED, Seat BOOKED ->
+	 * AVAILABLE) run in one short atomic transaction guarded by the Seat
+	 * {@code @Version} optimistic lock. If the provider rejects the refund or
+	 * is unreachable, nothing local changes: the booking stays CONFIRMED and
+	 * the seat stays BOOKED.
+	 *
+	 * The per-seat Redis lock serializes concurrent cancellations of the same
+	 * booking (and against the reservation hot path), so a duplicated or
+	 * retried request can never issue a second refund: a replay always finds
+	 * the booking already CANCELLED with the refund reference persisted, and
+	 * is rejected without ever touching the provider again.
+	 */
+	public Booking cancelConfirmedBooking(UUID bookingId) {
+		Booking booking = bookingRepository.findById(bookingId)
+				.orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + bookingId));
+		return reservationLockService.withSeatLock(booking.getEvent().getId(), booking.getSeat().getId(),
+				() -> cancelConfirmedWithinLock(bookingId));
+	}
+
+	private Booking cancelConfirmedWithinLock(UUID bookingId) {
+		Booking booking = bookingRepository.findById(bookingId)
+				.orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + bookingId));
+		if (booking.getStatus() != BookingStatus.CONFIRMED) {
+			// Includes the replay of an already-cancelled booking: the
+			// persisted razorpay refund reference proves the money was
+			// reversed, so the safe replay behavior is to reject without
+			// re-refunding, re-releasing the seat or re-transitioning.
+			throw new InvalidStateTransitionException(
+					"Cannot cancel booking in status " + booking.getStatus());
+		}
+		if (!booking.getEvent().getEventDate().isAfter(Instant.now())) {
+			throw new InvalidStateTransitionException(
+					"Cannot cancel a booking after the event has started.");
+		}
+		Payment payment = paymentRepository.findByBookingId(bookingId)
+				.orElseThrow(() -> new InvalidStateTransitionException(
+						"No successful payment to refund for this booking."));
+		if (payment.getStatus() != PaymentStatus.SUCCESS || payment.getRazorpayPaymentId() == null) {
+			throw new InvalidStateTransitionException(
+					"No successful payment to refund for this booking.");
+		}
+
+		// Slow external provider call - deliberately OUTSIDE any database
+		// transaction. Nothing local has been mutated yet, so a failure here
+		// leaves booking CONFIRMED, payment SUCCESS and seat BOOKED.
+		String refundId = paymentProvider.refundPayment(payment.getRazorpayPaymentId(),
+				payment.getAmount());
+
+		return transactionTemplate.execute(
+				status -> applyConfirmedCancellation(bookingId, payment.getId(), refundId));
+	}
+
+	/**
+	 * The single atomic database state change after a successful provider
+	 * refund. The per-seat Redis lock makes a concurrent writer to this
+	 * booking/seat pair practically impossible; the defensive re-checks and
+	 * the Seat {@code @Version} optimistic lock are the final safety net.
+	 */
+	private Booking applyConfirmedCancellation(UUID bookingId, UUID paymentId, String refundId) {
+		Booking booking = bookingRepository.findById(bookingId)
+				.orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + bookingId));
+		if (booking.getStatus() == BookingStatus.CANCELLED) {
+			// A concurrent cancellation already committed - never release
+			// the seat a second time and never re-write the payment.
+			return booking;
+		}
+		if (booking.getStatus() != BookingStatus.CONFIRMED) {
+			throw new InvalidStateTransitionException(
+					"Booking changed concurrently; refund not applied");
+		}
+		Seat seat = booking.getSeat();
+		if (seat.getStatus() != SeatStatus.BOOKED) {
+			throw new InvalidStateTransitionException("Seat is not booked and cannot be released");
+		}
+		seat.setStatus(SeatStatus.AVAILABLE);
+		try {
+			seatRepository.saveAndFlush(seat);
+		}
+		catch (ObjectOptimisticLockingFailureException ex) {
+			throw new InvalidStateTransitionException(
+					"Booking changed concurrently; refund not applied");
+		}
+		booking.setStatus(BookingStatus.CANCELLED);
+		Payment payment = paymentRepository.findById(paymentId).orElseThrow();
+		payment.setStatus(PaymentStatus.REFUNDED);
+		payment.setRazorpayRefundId(refundId);
+		return booking;
 	}
 
 	private PaymentConfirmationResponse confirmationOf(UUID bookingId) {

@@ -300,10 +300,22 @@ class PaymentConcurrencyTests {
 		pool.shutdown();
 		assertThat(pool.awaitTermination(60, TimeUnit.SECONDS)).isTrue();
 
+		/* The race has two legitimate winners, so the assertion mirrors the
+		   expiration race above: either verification committed first and the
+		   booking is CONFIRMED with a BOOKED seat and a SUCCESS payment, or
+		   cancellation committed first and the payment can never end SUCCESS.
+		   What must NEVER happen is a CANCELLED booking paired with a SUCCESS
+		   payment, or a booking left PENDING. */
 		Booking booking = bookingRepository.findById(bookingId).orElseThrow();
 		Payment payment = paymentRepository.findByBookingId(bookingId).orElseThrow();
 		assertThat(booking.getStatus()).isNotEqualTo(BookingStatus.PENDING);
-		assertThat(payment.getStatus()).isNotEqualTo(PaymentStatus.SUCCESS);
+		if (booking.getStatus() == BookingStatus.CONFIRMED) {
+			assertThat(payment.getStatus()).isEqualTo(PaymentStatus.SUCCESS);
+		}
+		else {
+			assertThat(booking.getStatus()).isIn(BookingStatus.EXPIRED, BookingStatus.CANCELLED);
+			assertThat(payment.getStatus()).isNotEqualTo(PaymentStatus.SUCCESS);
+		}
 	}
 
 	private static String safe(Future<Object> future) {

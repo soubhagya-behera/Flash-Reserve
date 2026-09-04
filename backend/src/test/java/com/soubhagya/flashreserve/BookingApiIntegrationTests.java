@@ -309,7 +309,7 @@ class BookingApiIntegrationTests {
 	}
 
 	@Test
-	void confirmedBookingCannotBeCancelled() throws Exception {
+	void confirmedBookingWithoutSuccessfulPaymentCannotBeCancelled() throws Exception {
 		User user = newUser("cancel-confirmed@example.test");
 		Event event = newPublishedEvent();
 		String bookingId = reserve(event, "S001", tokenFor(user));
@@ -321,7 +321,11 @@ class BookingApiIntegrationTests {
 		mockMvc.perform(post("/api/bookings/{id}/cancel", bookingId)
 						.header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenFor(user)))
 				.andExpect(status().isConflict())
-				.andExpect(jsonPath("$.message").value("Cannot cancel booking in status CONFIRMED"));
+				.andExpect(jsonPath("$.message")
+						.value("No successful payment to refund for this booking."));
+
+		assertThat(bookingRepository.findById(UUID.fromString(bookingId)).orElseThrow().getStatus())
+				.isEqualTo(BookingStatus.CONFIRMED);
 	}
 
 	@Test

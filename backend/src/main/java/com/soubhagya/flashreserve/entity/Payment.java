@@ -74,6 +74,16 @@ public class Payment {
 	@Column(name = "razorpay_payment_id", length = 64)
 	private String razorpayPaymentId;
 
+	/**
+	 * The provider (Razorpay) refund id returned when the provider accepted
+	 * the refund of this payment. Set only in the same transaction that marks
+	 * the payment REFUNDED, so its presence is durable proof that money was
+	 * actually reversed - the evidence a retried cancellation needs in order
+	 * to never refund twice.
+	 */
+	@Column(name = "razorpay_refund_id", length = 64)
+	private String razorpayRefundId;
+
 	@CreationTimestamp
 	@Column(name = "created_at", nullable = false, updatable = false)
 	@Setter(AccessLevel.NONE)
@@ -103,6 +113,10 @@ public class Payment {
 
 	public void setRazorpayPaymentId(String razorpayPaymentId) {
 		this.razorpayPaymentId = razorpayPaymentId;
+	}
+
+	public void setRazorpayRefundId(String razorpayRefundId) {
+		this.razorpayRefundId = razorpayRefundId;
 	}
 
 }

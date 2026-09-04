@@ -24,7 +24,9 @@ const STATUS_TONES = {
  * BookingResponse and renders it; it never fetches and holds no
  * booking state. Used by both the bookings list and the detail
  * page (`detailed` shows the full record). Cancellation is a
- * two-step control so a single stray click never cancels.
+ * two-step control so a single stray click never cancels: PENDING
+ * bookings release the seat, CONFIRMED bookings (before event
+ * start) are cancelled with a full refund.
  */
 export default function BookingCard({
   booking,
@@ -41,6 +43,17 @@ export default function BookingCard({
   const remainingSeconds = useCountdown(
     booking.status === 'PENDING' ? booking.expiresAt : null,
   )
+  /* CONFIRMED bookings are cancellable with a full refund only before
+     the event starts. Reuses the hold-countdown hook: it ticks every
+     second and stops at zero, so the action disappears the moment the
+     event starts. The backend re-validates this authoritatively. */
+  const secondsToStart = useCountdown(
+    booking.status === 'CONFIRMED' ? booking.eventDate : null,
+  )
+  const canCancelConfirmed =
+    booking.status === 'CONFIRMED' && secondsToStart > 0
+  const cancellable =
+    (booking.status === 'PENDING' || canCancelConfirmed) && onCancel
 
   const handleCancelClick = () => {
     if (confirming) {
@@ -141,11 +154,13 @@ export default function BookingCard({
           </Link>
         )}
 
-        {booking.status === 'PENDING' && onCancel && (
+        {cancellable && (
           <div className="booking-card__cancel">
             {confirming && (
               <p className="booking-card__confirm fr-small" role="note">
-                Cancel this booking and release the seat?
+                {booking.status === 'PENDING'
+                  ? 'Cancel this booking and release the seat?'
+                  : 'Cancel this booking? It will be cancelled and the payment fully refunded.'}
               </p>
             )}
             {confirming ? (

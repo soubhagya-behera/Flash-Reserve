@@ -30,6 +30,15 @@ public interface PaymentProvider {
 	boolean verifySignature(String orderId, String paymentId, String signature);
 
 	/**
+	 * Asks the provider to refund {@code amount} (in the base currency unit,
+	 * e.g. rupees) of a previously successful payment and returns the
+	 * provider refund id. The refund reference is the durable evidence that
+	 * money actually left, so it is persisted together with the REFUNDED
+	 * payment state. Never logs the secret.
+	 */
+	String refundPayment(String razorpayPaymentId, BigDecimal amount);
+
+	/**
 	 * The public, client-side identifier the provider requires to render its
 	 * checkout. It is safe to expose to the browser; it is never the secret.
 	 */

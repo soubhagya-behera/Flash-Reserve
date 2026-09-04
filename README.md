@@ -222,7 +222,7 @@ Swagger UI includes an **Authorize** button - paste the JWT you get from `/api/a
 | POST | `/api/events/{eventId}/seats/{seatId}/reservations` | USER | Reserve a seat (temporary hold) - `409` if taken, `429` rate limited per user, `503` if Redis is down |
 | GET | `/api/bookings` | USER | Caller's own bookings, paginated |
 | GET | `/api/bookings/{bookingId}` | USER | One owned booking (`404` for foreign/missing) |
-| POST | `/api/bookings/{bookingId}/cancel` | USER | Cancel a `PENDING` booking and release the seat |
+| POST | `/api/bookings/{bookingId}/cancel` | USER | `PENDING`: cancel and release the seat. `CONFIRMED`: full Razorpay refund first, then cancel (rejected after event start / on refund failure) |
 | POST | `/api/bookings/{bookingId}/payment` | USER | Create/reuse a Razorpay TEST order for the booking |
 | POST | `/api/bookings/{bookingId}/payment/verify` | USER | Verify the checkout result; confirms on valid signature |
 | POST | `/api/admin/events` | ADMIN | Create a DRAFT event with its seat inventory |

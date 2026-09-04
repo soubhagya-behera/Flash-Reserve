@@ -49,6 +49,8 @@ public class BookingService {
 
 	private final ReservationLockService reservationLockService;
 
+	private final PaymentService paymentService;
+
 	private final TransactionTemplate transactionTemplate;
 
 	public Booking getById(UUID id) {
@@ -77,14 +79,40 @@ public class BookingService {
 	}
 
 	/**
-	 * Cancels a PENDING booking and releases its seat (HELD -> AVAILABLE) in
-	 * one transaction. Non-cancellable states are rejected with a conflict.
-	 * Seat {@code @Version} optimistic locking arbitrates against a concurrent
-	 * expiration: only one of the two writers can change the seat, so the
-	 * loser rolls back and the booking/seat pair stays consistent.
+	 * Cancels one of the caller's own bookings, dispatched by status:
+	 * <ul>
+	 * <li>PENDING - releases the seat (HELD -> AVAILABLE) in one short
+	 * transaction. Non-cancellable states are rejected with a conflict. Seat
+	 * {@code @Version} optimistic locking arbitrates against a concurrent
+	 * expiration, so the seat state stays consistent.</li>
+	 * <li>CONFIRMED - the paid-cancellation flow owned by
+	 * {@link PaymentService#cancelConfirmedBooking}: the provider refund is
+	 * requested first, outside any database transaction, and the booking is
+	 * only cancelled after the refund is accepted.</li>
+	 * <li>EXPIRED / CANCELLED - always rejected with a conflict, exactly as
+	 * before; a repeated cancellation never re-runs a refund or re-releases a
+	 * seat.</li>
+	 * </ul>
+	 * Deliberately NOT {@code @Transactional}: the CONFIRMED path must never
+	 * hold a database transaction open across the slow external provider call.
 	 */
-	@Transactional
 	public Booking cancelBooking(UUID bookingId, UUID userId) {
+		Booking booking = getOwnedBooking(bookingId, userId);
+		return switch (booking.getStatus()) {
+			case PENDING -> transactionTemplate.execute(status -> cancelPending(bookingId, userId));
+			case CONFIRMED -> paymentService.cancelConfirmedBooking(bookingId);
+			case EXPIRED, CANCELLED -> throw new InvalidStateTransitionException(
+					"Cannot cancel booking in status " + booking.getStatus());
+		};
+	}
+
+	/**
+	 * Existing PENDING cancellation, unchanged: seat HELD -> AVAILABLE and
+	 * booking CANCELLED in a single transaction, with the Seat
+	 * {@code @Version} optimistic lock arbitrating against a concurrent
+	 * hold expiration.
+	 */
+	private Booking cancelPending(UUID bookingId, UUID userId) {
 		Booking booking = getOwnedBooking(bookingId, userId);
 		if (booking.getStatus() != BookingStatus.PENDING) {
 			throw new InvalidStateTransitionException(
