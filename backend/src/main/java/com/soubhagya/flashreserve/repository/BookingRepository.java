@@ -78,4 +78,18 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
 	List<UUID> findDueHoldIds(@Param("status") BookingStatus status,
 			@Param("threshold") Instant threshold);
 
+	/**
+	 * Dashboard aggregate: one grouped count per booking status instead of
+	 * separate count queries or in-memory counting. Absent statuses mean zero.
+	 */
+	@Query("select b.status as status, count(b) as total from Booking b group by b.status")
+	List<BookingStatusCount> countGroupedByStatus();
+
+	interface BookingStatusCount {
+
+		BookingStatus getStatus();
+
+		long getTotal();
+	}
+
 }
