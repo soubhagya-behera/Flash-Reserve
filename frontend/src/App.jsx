@@ -9,6 +9,7 @@ import BookingsPage from './pages/BookingsPage.jsx'
 import BookingDetailPage from './pages/BookingDetailPage.jsx'
 import DashboardPage from './pages/DashboardPage.jsx'
 import AdminEventsPage from './pages/admin/AdminEventsPage.jsx'
+import AdminDashboardPage from './pages/admin/AdminDashboardPage.jsx'
 import AdminEventDetailPage from './pages/admin/AdminEventDetailPage.jsx'
 import AdminEventFormPage from './pages/admin/AdminEventFormPage.jsx'
 import AdminBookingsPage from './pages/admin/AdminBookingsPage.jsx'
@@ -49,6 +50,14 @@ function App() {
         />
         {/* Admin area: authentication + ROLE_ADMIN required. "new"
             must match before :eventId so it is not read as an id. */}
+        <Route
+          path="/admin"
+          element={
+            <RequireAdmin>
+              <AdminDashboardPage />
+            </RequireAdmin>
+          }
+        />
         <Route
           path="/admin/events"
           element={

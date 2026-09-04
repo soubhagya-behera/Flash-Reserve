@@ -81,6 +81,13 @@ export default function Navigation() {
                 {user?.role === 'ADMIN' && (
                   <>
                     <Link
+                      to="/admin"
+                      className="fr-btn fr-btn--ghost fr-btn--compact"
+                      onClick={closeMenu}
+                    >
+                      Overview
+                    </Link>
+                    <Link
                       to="/admin/events"
                       className="fr-btn fr-btn--ghost fr-btn--compact"
                       onClick={closeMenu}

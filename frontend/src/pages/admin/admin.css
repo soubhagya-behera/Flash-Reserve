@@ -284,6 +284,61 @@
   border: 0;
 }
 
+/* --- Dashboard ------------------------------------------------------
+   Metric cards and panel layout for the ADMIN overview. Fluid grids
+   throughout: cards wrap and stack with no horizontal overflow. */
+
+.admin-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: var(--fr-space-sm);
+  margin-bottom: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+.admin-metric {
+  padding: 1.1rem 1.25rem;
+}
+
+.admin-metric__value {
+  font-family: var(--fr-font-display);
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--fr-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-metric__value--accent {
+  background-image: var(--fr-gradient-brand);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.admin-metric__label {
+  margin-top: 0.3rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: var(--fr-tracking-caps);
+  text-transform: uppercase;
+  color: var(--fr-text-muted);
+}
+
+.admin-metric__skeleton {
+  height: 2rem;
+}
+
+.admin-panels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+  gap: var(--fr-space-sm);
+  margin-bottom: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+.admin-section-title {
+  margin-bottom: var(--fr-space-md);
+}
+
 /* --- Responsive collapse -------------------------------------------
    Tablet (~900px): detail grid collapses to one column. The event
    table has its own mobile rules in components/admin/admin-table.css. */
