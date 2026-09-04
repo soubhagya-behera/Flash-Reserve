@@ -141,8 +141,13 @@ public class PaymentService {
 						"Payment has not been initiated for this booking."));
 
 		if (payment.getStatus() == PaymentStatus.SUCCESS) {
-			// Idempotent replay of an already-confirmed payment.
-			return confirmationOf(bookingId);
+			// Idempotent replay of an already-confirmed payment: the stored,
+			// signature-proven outcome is authoritative, so HMAC verification
+			// is never re-run and no payment/booking/seat state is touched.
+			// The response is assembled inside a transaction because
+			// confirmationOf resolves the LAZY seat association and must not
+			// run on detached entities (spring.jpa.open-in-view=false).
+			return transactionTemplate.execute(status -> confirmationOf(bookingId));
 		}
 
 		if (request.isFailed()) {
