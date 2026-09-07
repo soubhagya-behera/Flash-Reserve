@@ -217,7 +217,7 @@ Swagger UI includes an **Authorize** button - paste the JWT you get from `/api/a
 |---|---|---|---|
 | POST | `/api/auth/register` | Public | Create a USER account, returns JWT (`429` rate limited per IP) |
 | POST | `/api/auth/login` | Public | Authenticate, returns JWT (`429` rate limited per IP) |
-| GET | `/api/events` | Public | Paginated list of published events (`page`, `size`, `sort`) |
+| GET | `/api/events` | Public | Paginated list of published events (`page`, `size`, `sort`; default size 20, maximum effective size 100 — larger values are clamped) |
 | GET | `/api/events/{eventId}` | Public | Published event detail |
 | GET | `/api/events/{eventId}/seats` | Public | Seat map, optional `?status=` filter |
 | POST | `/api/events/{eventId}/seats/{seatId}/reservations` | USER | Reserve a seat (temporary hold) - `409` if taken, `429` rate limited per user, `503` if Redis is down |
