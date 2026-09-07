@@ -236,6 +236,7 @@ Swagger UI includes an **Authorize** button - paste the JWT you get from `/api/a
 - **Public (no JWT):** registration, login, published event browsing, health. **Everything else requires a JWT**; anything not explicitly permitted is denied by default.
 - **Swagger UI / OpenAPI JSON are public to browse**, but calling a protected API from Swagger still requires a real JWT.
 - No secrets are committed: `application.properties` is git-ignored; only `application-example.properties` (placeholders) is tracked.
+- **Production requires the `JWT_SECRET` environment variable.** The `production` profile (`application-production.properties`) has **no fallback**: startup fails when the variable is missing/empty or matches a known placeholder/default value, so the application can never boot with a forgeable, publicly-known signing key. Local development keeps its own strong secret (>= 32 characters) in the git-ignored `application.properties` or via `JWT_SECRET` - never in tracked files.
 - The JWT secret and Razorpay key secret are read from the environment or local config only, and never appear in API responses or logs.
 - The Razorpay **key secret never leaves the server**; clients only ever see the public key id.
 - Actuator exposes **only health endpoints** (`management.endpoints.web.exposure.include=health`); env, beans, mappings and configprops are not exposed.
