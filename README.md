@@ -207,6 +207,7 @@ Interactive documentation is served by Springdoc OpenAPI:
 
 - **Swagger UI:** <http://localhost:8080/swagger-ui/index.html>
 - **OpenAPI 3 JSON:** <http://localhost:8080/v3/api-docs>
+- **Production:** the `production` profile disables both, so `/v3/api-docs` and `/swagger-ui/**` return `404` and the API contract is not publicly discoverable (applied by `ProductionProfileInitializer`; there is no `application-production.properties` file).
 
 Swagger UI includes an **Authorize** button - paste the JWT you get from `/api/auth/login` and it will send `Authorization: Bearer <JWT>` on protected calls. Every endpoint documents its required role, parameters, and the important error responses (`400`, `401`, `403`, `404`, `409`, `429`, `503`) in the project's standard `ApiError` JSON shape.
 
