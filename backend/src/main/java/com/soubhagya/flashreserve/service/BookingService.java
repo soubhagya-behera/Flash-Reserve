@@ -20,6 +20,7 @@ import com.soubhagya.flashreserve.repository.EventRepository;
 import com.soubhagya.flashreserve.repository.SeatRepository;
 import com.soubhagya.flashreserve.repository.UserRepository;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -165,7 +166,19 @@ public class BookingService {
 		User user = userRepository.getReferenceById(userId);
 		Booking booking = new Booking(user, event, seat,
 				Instant.now().plus(reservationProperties.holdDuration()));
-		booking = bookingRepository.saveAndFlush(booking);
+		try {
+			booking = bookingRepository.saveAndFlush(booking);
+		}
+		catch (DataIntegrityViolationException ex) {
+			// Defense-in-depth only: the partial unique index
+			// uk_bookings_one_pending_per_seat rejected a second PENDING
+			// booking for this seat. Both the Redis seat lock and the Seat
+			// @Version optimistic lock were bypassed or raced past, so the
+			// database is the final arbiter. The surrounding transaction rolls
+			// back (seat HELD write included), and the loser sees the same
+			// conflict as every other reservation race.
+			throw new InvalidStateTransitionException("Seat is no longer available.");
+		}
 
 		return ReservationResponse.from(booking);
 	}
