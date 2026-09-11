@@ -78,7 +78,7 @@ export function useSeatUpdates({ eventId, enabled, onEvent, onReconnect }) {
         for (const payload of queued ?? []) deliver(payload)
       }
 
-      source.onmessage = (message) => {
+      const handleMessage = (message) => {
         let payload
         try {
           payload = JSON.parse(message.data)
@@ -91,6 +91,12 @@ export function useSeatUpdates({ eventId, enabled, onEvent, onReconnect }) {
         }
         deliver(payload)
       }
+
+      // Backend sends `event: seat-status`; EventSource delivers named events
+      // only to addEventListener, not to onmessage. Listen for both to avoid
+      // silent loss of live seat updates (root cause of two-browser desync).
+      source.addEventListener('seat-status', handleMessage)
+      source.onmessage = handleMessage
 
       source.onerror = () => {
         source.close()

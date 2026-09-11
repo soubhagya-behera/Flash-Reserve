@@ -28,6 +28,19 @@ export function versionsFromSnapshot(seats) {
 }
 
 /**
+ * Determines whether an SSE seat event should surface the
+ * "reserved by another user" UX. Own reservation and in-flight
+ * own attempt are suppressed; only genuine remote conflicts surface.
+ */
+export function shouldShowRemoteConflict({ incoming, selectedSeatId, ownedSeatId, reserving }) {
+  if (!incoming || incoming.status === 'AVAILABLE') return false
+  if (!selectedSeatId || incoming.seatId !== selectedSeatId) return false
+  if (ownedSeatId != null && ownedSeatId === incoming.seatId) return false
+  if (reserving && selectedSeatId === incoming.seatId) return false
+  return true
+}
+
+/**
  * Applies one seat-status event to a seat array. Version-guarded:
  * stale/out-of-order events for the same seat are ignored.
  * `versions` maps seatId -> max applied seatVersion.

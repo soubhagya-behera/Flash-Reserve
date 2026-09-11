@@ -1,6 +1,12 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { applySeatUpdate, isSeatStatusEvent, seatUpdatesUrl, versionsFromSnapshot } from './seatUpdates.js'
+import {
+  applySeatUpdate,
+  isSeatStatusEvent,
+  seatUpdatesUrl,
+  shouldShowRemoteConflict,
+  versionsFromSnapshot,
+} from './seatUpdates.js'
 
 describe('seatUpdates reducer', () => {
   it('builds the stream url for an event', () => {
@@ -65,5 +71,54 @@ describe('seatUpdates reducer', () => {
     const oldEvent = { seatId: 's1', seatNumber: 'S008', status: 'AVAILABLE', seatVersion: 6 }
     const r = applySeatUpdate(fresh, oldEvent, versions)
     assert.equal(r.applied, false)
+  })
+})
+
+describe('remote conflict ownership', () => {
+  const held = { seatId: 's10', seatNumber: 'S010', status: 'HELD', seatVersion: 2 }
+  const booked = { seatId: 's10', seatNumber: 'S010', status: 'BOOKED', seatVersion: 3 }
+  const available = { seatId: 's10', seatNumber: 'S010', status: 'AVAILABLE', seatVersion: 4 }
+
+  it('shows remote HELD when another user reserved selected seat', () => {
+    assert.equal(
+      shouldShowRemoteConflict({ incoming: held, selectedSeatId: 's10', ownedSeatId: null, reserving: false }),
+      true,
+    )
+  })
+  it('suppresses when reserving browser owns seat via active reservation', () => {
+    assert.equal(
+      shouldShowRemoteConflict({ incoming: held, selectedSeatId: 's10', ownedSeatId: 's10', reserving: false }),
+      false,
+    )
+    assert.equal(
+      shouldShowRemoteConflict({ incoming: booked, selectedSeatId: 's10', ownedSeatId: 's10', reserving: false }),
+      false,
+    )
+  })
+  it('suppresses during in-flight own reservation attempt', () => {
+    assert.equal(
+      shouldShowRemoteConflict({ incoming: held, selectedSeatId: 's10', ownedSeatId: null, reserving: true }),
+      false,
+    )
+  })
+  it('does not show for AVAILABLE or unselected seat', () => {
+    assert.equal(
+      shouldShowRemoteConflict({ incoming: available, selectedSeatId: 's10', ownedSeatId: null, reserving: false }),
+      false,
+    )
+    assert.equal(
+      shouldShowRemoteConflict({ incoming: held, selectedSeatId: 's99', ownedSeatId: null, reserving: false }),
+      false,
+    )
+    assert.equal(
+      shouldShowRemoteConflict({ incoming: held, selectedSeatId: null, ownedSeatId: null, reserving: false }),
+      false,
+    )
+  })
+  it('shows for genuine remote BOOKED on selected seat', () => {
+    assert.equal(
+      shouldShowRemoteConflict({ incoming: booked, selectedSeatId: 's10', ownedSeatId: 's99', reserving: false }),
+      true,
+    )
   })
 })

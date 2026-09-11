@@ -35,6 +35,8 @@ export default function EventDetailPage() {
     setSelectedSeatId,
     setReservationError,
     onUnknownSeat: () => setSeatsNonce((c) => c + 1),
+    reservation,
+    reserving,
   })
 
   useEffect(() => {

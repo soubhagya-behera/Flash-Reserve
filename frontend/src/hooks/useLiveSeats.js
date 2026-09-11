@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useRef } from 'react'
-import { applySeatUpdate, isSeatStatusEvent, versionsFromSnapshot } from '../services/seatUpdates.js'
+import {
+  applySeatUpdate,
+  isSeatStatusEvent,
+  shouldShowRemoteConflict,
+  versionsFromSnapshot,
+} from '../services/seatUpdates.js'
 import { useSeatUpdates } from './useSeatUpdates.js'
 import * as eventService from '../services/eventService.js'
 
@@ -17,15 +22,23 @@ export function useLiveSeats({
   setSelectedSeatId,
   setReservationError,
   onUnknownSeat,
+  reservation,
+  reserving,
 }) {
   const seatVersionsRef = useRef(new Map())
   const seatsLiveRef = useRef(seats)
   seatsLiveRef.current = seats
+  const reservationRef = useRef(reservation)
+  reservationRef.current = reservation
+  const reservingRef = useRef(reserving)
+  reservingRef.current = reserving
 
   const seedFromSnapshot = useCallback(
     (seatList) => {
-      seatVersionsRef.current = versionsFromSnapshot(seatList)
-      setSeats(seatList ?? [])
+      const list = seatList ?? []
+      seatVersionsRef.current = versionsFromSnapshot(list)
+      seatsLiveRef.current = list
+      setSeats(list)
     },
     [setSeats],
   )
@@ -43,7 +56,16 @@ export function useLiveSeats({
       }
       setSeats(result.seats)
       setSelectedSeatId((current) => {
-        if (current && incoming.seatId === current && incoming.status !== 'AVAILABLE') {
+        const ownedSeatId = reservationRef.current?.seatId ?? null
+        const reserving = Boolean(reservingRef.current)
+        if (
+          shouldShowRemoteConflict({
+            incoming,
+            selectedSeatId: current,
+            ownedSeatId,
+            reserving,
+          })
+        ) {
           const verb = incoming.status === 'HELD' ? 'reserved' : 'booked'
           setReservationError(`Seat ${incoming.seatNumber} was just ${verb} by another user.`)
           return null
@@ -54,8 +76,10 @@ export function useLiveSeats({
     onReconnect: async () => {
       try {
         const freshSeats = await eventService.listEventSeats(eventId)
-        seatVersionsRef.current = versionsFromSnapshot(freshSeats)
-        setSeats(freshSeats ?? [])
+        const list = freshSeats ?? []
+        seatVersionsRef.current = versionsFromSnapshot(list)
+        seatsLiveRef.current = list
+        setSeats(list)
       } catch {
         // keep live stream; next reconnect refetches
       }
