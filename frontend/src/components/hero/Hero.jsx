@@ -14,8 +14,10 @@ export default function Hero() {
             FlashReserve · Live reservations
           </p>
 
-          <h1 className="fr-display hero__title fr-anim-fade-up" style={{ animationDelay: '90ms' }}>
-            Reserve the&nbsp;moment.
+          <h1 className="hero__title fr-anim-fade-up" style={{ animationDelay: '90ms' }}>
+            Reserve
+            <br />
+            <span className="hero__title-accent">the moment.</span>
           </h1>
 
           <p className="hero__lead fr-anim-fade-up" style={{ animationDelay: '180ms' }}>
@@ -26,11 +28,12 @@ export default function Hero() {
 
           <div className="hero__cta fr-anim-fade-up" style={{ animationDelay: '270ms' }}>
             <Link to="/events" className="fr-btn fr-btn--primary">
-              Explore events
+              Explore events <span aria-hidden="true">→</span>
             </Link>
             <Button href="#how-it-works" variant="ghost">
               How it works
             </Button>
+            <span className="hero__cta-note">No setup · Instant hold</span>
           </div>
 
           <p className="hero__flow fr-anim-fade-in" style={{ animationDelay: '420ms' }}>

@@ -1,5 +1,6 @@
 /* ============================================================
    FlashReserve — Feature showcase + final CTA
+   Rose / magenta accents, no noisy gradients.
    ============================================================ */
 
 .features__grid {
@@ -15,21 +16,24 @@
   padding: var(--fr-space-lg) var(--fr-space-md);
   border: 1px solid var(--fr-border);
   border-radius: var(--fr-radius-lg);
-  background: var(--fr-surface);
+  background: rgba(255, 255, 255, 0.92);
   box-shadow: var(--fr-shadow-sm);
   transition:
     transform var(--fr-dur) var(--fr-ease),
-    box-shadow var(--fr-dur) var(--fr-ease);
+    box-shadow var(--fr-dur) var(--fr-ease),
+    border-color var(--fr-dur) var(--fr-ease);
 }
 
 .feature:hover {
   transform: translateY(-4px);
   box-shadow: var(--fr-shadow-md);
+  border-color: rgba(233, 184, 205, 0.9);
 }
 
 .feature__title {
   font-size: 1.0625rem;
   color: var(--fr-text);
+  position: relative;
 }
 
 .feature__detail {
@@ -47,19 +51,16 @@
   background-image: var(--fr-gradient-surface);
 }
 
-.feature__title {
-  position: relative;
-}
-
 /* Mini seat-map scene inside the spotlight card. */
 .feature__scene {
   display: grid;
   justify-items: center;
   gap: 0.7rem;
   padding: var(--fr-space-md);
-  border: 1px solid var(--fr-border);
+  border: 1px solid rgba(255, 255, 255, 0.75);
   border-radius: var(--fr-radius-md);
-  background: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: var(--fr-shadow-sm);
 }
 
 .feature__mini-map {
@@ -73,21 +74,23 @@
   width: 1.1rem;
   height: 1.1rem;
   border-radius: 0.35rem;
-  background: var(--fr-primary-soft);
+  background: #f3d1de;
+  border: 1px solid #e9b8cd;
 }
 
 .feature__mini-seat--locked {
   background-image: var(--fr-gradient-brand);
+  border-color: rgba(190, 24, 93, 0.22);
   box-shadow: var(--fr-shadow-glow);
 }
 
 .feature__lock-chip {
-  padding: 0.3rem 0.7rem;
+  padding: 0.32rem 0.72rem;
   border-radius: var(--fr-radius-full);
   background: var(--fr-surface);
   border: 1px solid var(--fr-border-strong);
   font-size: 0.6875rem;
-  font-weight: 700;
+  font-weight: 750;
   color: var(--fr-primary-strong);
 }
 
@@ -100,16 +103,23 @@
   justify-items: center;
   gap: var(--fr-space-md);
   padding: clamp(3rem, 7vw, 5.5rem) var(--fr-space-md);
-  border-radius: calc(var(--fr-radius-lg) * 1.5);
+  border-radius: calc(var(--fr-radius-lg) * 1.35);
   text-align: center;
+  background: rgba(255, 255, 255, 0.76);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.95) inset,
+    0 20px 48px rgba(36, 19, 51, 0.1);
 }
 
 .cta__glow {
   position: absolute;
   inset: 0;
   background:
-    var(--fr-gradient-glow-accent) 8% 0% / 50% 70% no-repeat,
-    var(--fr-gradient-glow-primary) 92% 100% / 55% 75% no-repeat;
+    radial-gradient(48% 62% at 12% 20%, rgba(219, 39, 119, 0.11) 0%, transparent 70%),
+    radial-gradient(46% 58% at 92% 88%, rgba(192, 38, 211, 0.09) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -126,6 +136,8 @@
 
 .cta__panel .fr-btn {
   margin-top: var(--fr-space-xs);
+  min-height: 2.9rem;
+  padding-inline: 1.6rem;
 }
 
 /* --- Responsive ------------------------------------------------ */

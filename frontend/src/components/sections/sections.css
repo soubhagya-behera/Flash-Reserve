@@ -1,6 +1,6 @@
 /* ============================================================
    FlashReserve — Shared section shell + capability strip +
-   how-it-works steps.
+   how-it-works steps. Rose palette.
    ============================================================ */
 
 /* --- Section header pattern ----------------------------------- */
@@ -17,10 +17,10 @@
 
 .section-eyebrow {
   font-size: 0.6875rem;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: var(--fr-tracking-caps);
   text-transform: uppercase;
-  color: var(--fr-accent);
+  color: var(--fr-primary);
 }
 
 .section-title {
@@ -36,7 +36,9 @@
 
 .cap {
   border-block: 1px solid var(--fr-border);
-  background: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.62);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .cap__list {
@@ -61,7 +63,7 @@
   gap: 0.5rem;
   font-family: var(--fr-font-body);
   font-size: var(--fr-text-sm);
-  font-weight: 700;
+  font-weight: 750;
   color: var(--fr-text);
 }
 
@@ -75,6 +77,7 @@
   color: var(--fr-primary-strong);
   font-size: 0.625rem;
   flex-shrink: 0;
+  border: 1px solid rgba(233, 184, 205, 0.6);
 }
 
 .cap__detail {
@@ -99,16 +102,18 @@
   padding: var(--fr-space-lg) var(--fr-space-md);
   border: 1px solid var(--fr-border);
   border-radius: var(--fr-radius-lg);
-  background: var(--fr-surface);
+  background: rgba(255, 255, 255, 0.9);
   box-shadow: var(--fr-shadow-sm);
   transition:
     transform var(--fr-dur) var(--fr-ease),
-    box-shadow var(--fr-dur) var(--fr-ease);
+    box-shadow var(--fr-dur) var(--fr-ease),
+    border-color var(--fr-dur) var(--fr-ease);
 }
 
 .step:hover {
   transform: translateY(-4px);
   box-shadow: var(--fr-shadow-md);
+  border-color: rgba(233, 184, 205, 0.9);
 }
 
 .step__number {
@@ -130,7 +135,7 @@
   color: var(--fr-text-soft);
 }
 
-/* A quiet rail behind the steps on wide screens. */
+/* Quiet rail behind the steps on wide screens */
 .steps::before {
   content: '';
   position: absolute;

@@ -1,105 +1,126 @@
 /* ============================================================
    FlashReserve — Design Tokens
-   Single source of truth for color, type, spacing, radius,
-   shadow and motion. Components consume these variables instead
-   of inventing raw values.
+   Deep pink / rose / magenta + soft purple SaaS palette.
+   Single source of truth: color, type, spacing, radius,
+   shadow and motion. Components consume variables, never
+   raw hex outside this file.
    ============================================================ */
 
 :root {
-  /* --- 1. Neutral surfaces: warm porcelain with a violet cast.
-         Never pure white, never pure black. --- */
-  --fr-bg: #faf8fc;
+  /* --- 1. Surfaces: warm rose porcelain, never pure white --- */
+  --fr-bg: #fff1f6;
   --fr-surface: #ffffff;
-  --fr-surface-soft: #f3effa;
+  --fr-surface-soft: #fce7f3;
   --fr-surface-elevated: #ffffff;
+  --fr-surface-tint: #fdf2f8;
 
   /* --- 2. Text: deep plum ink --- */
-  --fr-text: #2b1c42;
-  --fr-text-soft: #544570;
-  --fr-text-muted: #7a6d92;
+  --fr-text: #241333;
+  --fr-text-soft: #6b587a;
+  --fr-text-muted: #8e7a9e;
 
-  /* --- 3. Brand spectrum --- */
-  --fr-primary: #7a5af8;        /* iris violet */
-  --fr-primary-strong: #6244e0; /* AA-safe on light surfaces */
-  --fr-primary-soft: #ede8fd;
-  --fr-accent: #d9539e;         /* aurora magenta */
-  --fr-accent-soft: #fbe7f2;
-  --fr-info: #5b8def;           /* dusk blue, used sparingly */
+  /* --- 3. Brand spectrum — deep pink · rose · magenta --- */
+  --fr-primary: #db2777;        /* pink — primary actions */
+  --fr-primary-strong: #be185d; /* deep rose — hover/ink on soft */
+  --fr-primary-hover: #a50f4d;  /* deeper press/active */
+  --fr-primary-soft: #fce7f3;   /* soft rose chip/border tint */
+  --fr-accent: #c026d3;         /* magenta — gradient partner */
+  --fr-accent-soft: #fae8ff;    /* lilac tint */
+  --fr-info: #9333ea;           /* subtle purple lift — sparing usage */
 
   /* --- 4. Semantic feedback --- */
-  --fr-success: #1f8f6b;
+  --fr-success: #15885d;
   --fr-success-soft: #ddf3ea;
   --fr-warning: #a3680a;
   --fr-warning-soft: #fbeed3;
   --fr-danger: #cf3d5e;
   --fr-danger-soft: #fbe1e6;
 
-  /* --- 5. Ink used on top of brand gradient fills --- */
+  /* --- 5. Ink on brand gradient --- */
   --fr-ink-on-brand: #ffffff;
 
-  /* --- 6. Atmospheric glow stops (referenced by orbs/gradients) --- */
-  --fr-glow-primary: rgba(122, 90, 248, 0.28);
-  --fr-glow-accent: rgba(217, 83, 158, 0.24);
-  --fr-glow-info: rgba(91, 141, 239, 0.22);
+  /* --- 6. Atmospheric glow stops --- */
+  --fr-glow-rose: rgba(219, 39, 119, 0.22);
+  --fr-glow-magenta: rgba(192, 38, 211, 0.16);
+  --fr-glow-plum: rgba(147, 51, 234, 0.14);
+  --fr-glow-peach: rgba(251, 113, 133, 0.16);
+  --fr-glow-primary: var(--fr-glow-rose);
+  --fr-glow-accent: var(--fr-glow-magenta);
+  --fr-glow-info: var(--fr-glow-plum);
 
-  /* --- 7. Borders --- */
-  --fr-border: #e7e1f2;
-  --fr-border-strong: #d4cbe8;
+  /* --- 7. Borders — rose-tinted --- */
+  --fr-border: #f3d1de;
+  --fr-border-strong: #e9b8cd;
+  --fr-border-soft: #fde4ef;
 
-  /* --- 8. Gradients (kept small and reusable) --- */
+  /* --- 8. Gradients (compact + reusable) --- */
   --fr-gradient-brand: linear-gradient(
-    120deg,
-    var(--fr-accent),
-    var(--fr-primary) 55%,
-    var(--fr-info)
+    135deg,
+    #be185d 0%,
+    #db2777 46%,
+    #c026d3 100%
   );
-  --fr-gradient-surface: linear-gradient(165deg, #f6f2fd, #fdf3f8);
+  --fr-gradient-brand-hover: linear-gradient(
+    135deg,
+    #a50f4d 0%,
+    #be185d 48%,
+    #a21caf 100%
+  );
+  --fr-gradient-surface: linear-gradient(165deg, #fff7fb, #fdf2f8 55%, #fce7f3 100%);
+  --fr-gradient-hero-wash: linear-gradient(180deg, #fff1f6 0%, #fdf2f8 55%, #ffffff 100%);
   --fr-gradient-glow-primary: radial-gradient(
     closest-side,
-    var(--fr-glow-primary),
-    transparent
+    var(--fr-glow-rose),
+    transparent 72%
   );
   --fr-gradient-glow-accent: radial-gradient(
     closest-side,
-    var(--fr-glow-accent),
-    transparent
+    var(--fr-glow-magenta),
+    transparent 72%
   );
   --fr-gradient-glow-info: radial-gradient(
     closest-side,
-    var(--fr-glow-info),
-    transparent
+    var(--fr-glow-plum),
+    transparent 72%
+  );
+  --fr-gradient-glow-peach: radial-gradient(
+    closest-side,
+    var(--fr-glow-peach),
+    transparent 72%
   );
 
-  /* --- 9. Shadows: plum-tinted, never heavy black --- */
+  /* --- 9. Shadows — rose/plum tinted, no harsh black --- */
   --fr-shadow-sm:
-    0 1px 2px rgba(43, 28, 66, 0.06),
-    0 2px 10px rgba(43, 28, 66, 0.05);
-  --fr-shadow-md: 0 10px 30px -12px rgba(43, 28, 66, 0.16);
-  --fr-shadow-lg: 0 24px 56px -20px rgba(43, 28, 66, 0.22);
-  --fr-shadow-glow: 0 10px 32px -10px rgba(122, 90, 248, 0.4);
+    0 1px 2px rgba(36, 19, 51, 0.06),
+    0 4px 14px rgba(36, 19, 51, 0.06);
+  --fr-shadow-md: 0 12px 32px -12px rgba(36, 19, 51, 0.18);
+  --fr-shadow-lg: 0 24px 56px -20px rgba(36, 19, 51, 0.22);
+  --fr-shadow-glow: 0 14px 36px -14px rgba(190, 24, 93, 0.42);
+  --fr-shadow-glow-hover: 0 18px 42px -14px rgba(190, 24, 93, 0.52);
 
   /* --- 10. Radius --- */
   --fr-radius-sm: 8px;
   --fr-radius-md: 14px;
   --fr-radius-lg: 22px;
+  --fr-radius-xl: 28px;
   --fr-radius-full: 999px;
 
-  /* --- 11. Spacing scale (fluid at the large end) --- */
+  /* --- 11. Spacing --- */
   --fr-space-2xs: 0.25rem;
   --fr-space-xs: 0.5rem;
   --fr-space-sm: 0.75rem;
   --fr-space-md: 1.25rem;
   --fr-space-lg: 2rem;
   --fr-space-xl: 3rem;
-  --fr-section: clamp(4rem, 9vw, 7rem);      /* between page sections */
-  --fr-gap-card: clamp(1rem, 2.5vw, 1.5rem); /* gaps inside card grids */
+  --fr-section: clamp(4rem, 9vw, 7rem);
+  --fr-gap-card: clamp(1rem, 2.5vw, 1.5rem);
 
   /* --- 12. Layout containers --- */
   --fr-container: 72rem;
   --fr-container-pad: clamp(1.25rem, 5vw, 2.5rem);
-  --fr-measure: 42rem; /* comfortable prose line length */
+  --fr-measure: 42rem;
 
-  /* --- 13. Typography: system stacks, editorial serif for display --- */
+  /* --- 13. Typography --- */
   --fr-font-display:
     'Charter', 'Iowan Old Style', 'Palatino Linotype',
     'Book Antiqua', Georgia, serif;
@@ -122,6 +143,7 @@
 
   /* --- 14. Motion --- */
   --fr-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --fr-ease-soft: cubic-bezier(0.32, 0.72, 0, 1);
   --fr-dur-fast: 160ms;
   --fr-dur: 280ms;
   --fr-dur-slow: 640ms;

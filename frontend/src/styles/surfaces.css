@@ -36,9 +36,10 @@
   box-shadow: var(--fr-shadow-sm);
 }
 
-/* Tinted, quieter sections of a page. */
+/* Tinted, quieter sections — rose tinted, not violet. */
 .fr-surface-soft {
-  background: var(--fr-surface-soft);
+  background: rgba(255, 255, 255, 0.72);
+  border-color: rgba(243, 209, 222, 0.9);
 }
 
 /* Cards that carry the primary action of a view. */
@@ -49,10 +50,13 @@
 
 /* Reserved for overlays and floating panels — use sparingly. */
 .fr-surface-glass {
-  background: rgba(255, 255, 255, 0.62);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  box-shadow: var(--fr-shadow-sm);
+  background: rgba(255, 255, 255, 0.68);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-color: rgba(255, 255, 255, 0.7);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    var(--fr-shadow-sm);
 }
 
 /* Atmospheric variant for immersive bands (hero, empty states). */

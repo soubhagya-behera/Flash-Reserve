@@ -1,45 +1,75 @@
 /* ============================================================
    FlashReserve — Navigation
-   Frosted bar on desktop; a simple disclosed panel on mobile.
+   Floating glass pill bar: elevated, bordered, shadowed.
+   All interactive states maintain high contrast — especially
+   Get Started. Mobile stays compact with no overflow.
    ============================================================ */
 
 .nav {
   position: sticky;
-  top: 0;
+  top: 0.75rem;
   z-index: 40;
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border-bottom: 1px solid var(--fr-border);
+  padding-inline: var(--fr-container-pad);
+  background: transparent;
+  border: 0;
+  pointer-events: none;
 }
 
 .nav__inner {
+  pointer-events: auto;
   display: flex;
   align-items: center;
   gap: var(--fr-space-md);
-  min-height: 4.25rem;
+  min-height: 3.65rem;
+  max-width: var(--fr-container);
+  margin-inline: auto;
+  padding: 0.4rem 0.5rem 0.4rem 0.65rem;
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(16px) saturate(1.15);
+  -webkit-backdrop-filter: blur(16px) saturate(1.15);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 8px 24px rgba(36, 19, 51, 0.08),
+    0 2px 8px rgba(36, 19, 51, 0.06);
+  border-radius: 999px;
+}
+
+/* Subtle rose hairline on scroll would be nice; keep warm tint always */
+@supports not (backdrop-filter: blur(1px)) {
+  .nav__inner {
+    background: rgba(255, 255, 255, 0.96);
+  }
 }
 
 .nav__brand {
   display: inline-flex;
   align-items: center;
-  gap: 0.65rem;
+  gap: 0.62rem;
   text-decoration: none;
+  color: var(--fr-text);
+  flex-shrink: 0;
+  padding-left: 0.25rem;
+}
+
+.nav__brand:hover {
   color: var(--fr-text);
 }
 
 .nav__brand .fr-mark {
-  width: 2.25rem;
-  height: 2.25rem;
-  font-size: 1.15rem;
-  border-radius: var(--fr-radius-sm);
+  width: 2.2rem;
+  height: 2.2rem;
+  font-size: 1.1rem;
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(190, 24, 93, 0.3);
 }
 
 .nav__wordmark {
   font-family: var(--fr-font-display);
-  font-size: 1.125rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  font-size: 1.08rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--fr-text);
 }
 
 .nav__menu {
@@ -48,38 +78,70 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--fr-space-md);
+  min-width: 0;
 }
 
 .nav__links {
   display: flex;
   align-items: center;
-  gap: clamp(1rem, 2.5vw, 1.75rem);
+  gap: 0.2rem;
   list-style: none;
 }
 
+.nav__links li {
+  display: flex;
+}
+
 .nav__links a {
-  font-size: var(--fr-text-sm);
-  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.05rem;
+  padding: 0 0.85rem;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 600;
   color: var(--fr-text-soft);
   text-decoration: none;
-  transition: color var(--fr-dur-fast) var(--fr-ease);
+  letter-spacing: 0.01em;
+  border: 1px solid transparent;
+  transition:
+    color var(--fr-dur-fast) var(--fr-ease),
+    background-color var(--fr-dur-fast) var(--fr-ease),
+    border-color var(--fr-dur-fast) var(--fr-ease);
 }
 
 .nav__links a:hover {
   color: var(--fr-primary-strong);
+  background: rgba(252, 231, 243, 0.9);
+  border-color: rgba(233, 184, 205, 0.55);
+}
+
+.nav__links a:active {
+  color: var(--fr-primary-strong);
+  background: var(--fr-primary-soft);
+  border-color: var(--fr-border-strong);
+}
+
+.nav__links a:focus-visible {
+  outline-offset: 2px;
 }
 
 .nav__actions {
   display: flex;
   align-items: center;
-  gap: var(--fr-space-xs);
+  gap: 0.42rem;
+  flex-shrink: 0;
 }
 
 .nav__user {
-  font-size: var(--fr-text-sm);
-  font-weight: 600;
+  font-size: 0.8125rem;
+  font-weight: 650;
   color: var(--fr-text-soft);
   white-space: nowrap;
+  padding-inline: 0.35rem 0.2rem;
+  max-width: 11rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* --- Mobile toggle (hidden on desktop) ---------------------- */
@@ -88,14 +150,29 @@
   display: none;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 0.9rem;
+  padding: 0.52rem 0.95rem;
   margin-left: auto;
-  border: 1px solid var(--fr-border-strong);
+  border: 1px solid var(--fr-border);
   border-radius: var(--fr-radius-full);
-  background: var(--fr-surface);
+  background: rgba(255, 255, 255, 0.92);
   color: var(--fr-text-soft);
-  font-size: var(--fr-text-sm);
-  font-weight: 600;
+  font-size: 0.8125rem;
+  font-weight: 650;
+  box-shadow: var(--fr-shadow-sm);
+  transition:
+    border-color var(--fr-dur-fast) var(--fr-ease),
+    color var(--fr-dur-fast) var(--fr-ease),
+    background-color var(--fr-dur-fast) var(--fr-ease);
+}
+
+.nav__toggle:hover {
+  border-color: var(--fr-primary);
+  color: var(--fr-primary-strong);
+  background: #fff7fb;
+}
+
+.nav__toggle:active {
+  background: var(--fr-primary-soft);
 }
 
 .nav__toggle-box {
@@ -104,13 +181,28 @@
 }
 
 .nav__toggle-bar {
-  width: 16px;
+  width: 14px;
   height: 2px;
   border-radius: 2px;
   background: currentColor;
 }
 
 @media (max-width: 52rem) {
+  .nav {
+    top: 0;
+    padding-inline: 0;
+  }
+
+  .nav__inner {
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+    border-top: 0;
+    padding-inline: var(--fr-container-pad);
+    min-height: 3.65rem;
+    background: rgba(255, 255, 255, 0.88);
+  }
+
   .nav__toggle {
     display: inline-flex;
   }
@@ -127,24 +219,25 @@
     display: grid;
     gap: var(--fr-space-md);
     padding: var(--fr-space-md) var(--fr-container-pad) var(--fr-space-lg);
-    background: rgba(255, 255, 255, 0.94);
+    background: rgba(255, 255, 255, 0.97);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border-bottom: 1px solid var(--fr-border);
+    border-radius: 0 0 18px 18px;
     box-shadow: var(--fr-shadow-md);
   }
 
   .nav__menu--open .nav__links {
     flex-direction: column;
     align-items: stretch;
-    gap: 0.25rem;
+    gap: 0.2rem;
   }
 
   .nav__menu--open .nav__links a {
-    display: block;
-    padding: 0.65rem 0.75rem;
-    border-radius: var(--fr-radius-sm);
-    font-size: var(--fr-text-md);
+    display: flex;
+    padding: 0.72rem 0.85rem;
+    border-radius: var(--fr-radius-md);
+    font-size: 0.9375rem;
   }
 
   .nav__menu--open .nav__links a:hover {
@@ -152,12 +245,16 @@
   }
 
   .nav__menu--open .nav__actions {
-    grid-auto-flow: row;
     display: grid;
-    gap: var(--fr-space-xs);
+    gap: 0.5rem;
   }
 
   .nav__menu--open .nav__actions .fr-btn {
     width: 100%;
+  }
+
+  .nav__menu--open .nav__user {
+    padding: 0.2rem 0.15rem;
+    max-width: none;
   }
 }

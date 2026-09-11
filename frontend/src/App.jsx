@@ -21,9 +21,10 @@ function App() {
   return (
     <>
       <div className="fr-atmosphere" aria-hidden="true">
-        <span className="fr-orb fr-orb--violet fr-anim-float" />
-        <span className="fr-orb fr-orb--pink fr-anim-float-slow" />
-        <span className="fr-orb fr-orb--blue fr-anim-float" />
+        <span className="fr-orb fr-orb--violet" />
+        <span className="fr-orb fr-orb--pink" />
+        <span className="fr-orb fr-orb--blue" />
+        <span className="fr-orb fr-orb--peach" />
       </div>
 
       <a className="skip-link" href="#main">

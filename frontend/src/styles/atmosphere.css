@@ -1,7 +1,9 @@
 /* ============================================================
    FlashReserve — Atmospheric background foundation
-   Mount .fr-atmosphere once near the app root. It is purely
-   decorative (aria-hidden) and never captures pointer events.
+   Warm rose / deep pink / soft purple glow field.
+   .fr-atmosphere mounts once at app root (aria-hidden).
+   Uses large blurred radial orbs + gentle drift + a very
+   subtle mesh wash so the center stays readable.
    ============================================================ */
 
 .fr-atmosphere {
@@ -10,55 +12,130 @@
   z-index: -1;
   overflow: hidden;
   pointer-events: none;
-  /* A quiet vertical wash: lavender light above, warm blush below. */
-  background: linear-gradient(
-    180deg,
-    var(--fr-surface-soft),
-    var(--fr-bg) 45%,
-    #fdf4f9
-  );
+  background:
+    radial-gradient(110% 85% at 78% 10%, rgba(252, 231, 243, 0.9) 0%, transparent 62%),
+    radial-gradient(90% 70% at 8% 18%, rgba(250, 232, 255, 0.65) 0%, transparent 58%),
+    linear-gradient(180deg, #fff1f6 0%, #fdf2f8 38%, #fff7fb 72%, #ffffff 100%);
 }
 
-/* Soft glow orbs — large blurred radial gradients, CSS only. */
+/* Fine grain for a tactile, non-flat base */
+.fr-atmosphere::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+}
+
+/* --- Orbs: large blurred radial gradients --- */
 .fr-orb {
   position: absolute;
   border-radius: 50%;
-  filter: blur(60px);
+  filter: blur(58px);
+  will-change: transform, opacity;
 }
 
+/* Top-left: primary rose spill — biggest, anchors the brand warmth */
 .fr-orb--violet {
-  width: 42vmax;
-  height: 42vmax;
-  top: -18vmax;
-  left: -12vmax;
-  background: var(--fr-gradient-glow-primary);
+  width: 46vmax;
+  height: 46vmax;
+  top: -16vmax;
+  left: -14vmax;
+  background: radial-gradient(
+    closest-side,
+    rgba(219, 39, 119, 0.22) 0%,
+    rgba(219, 39, 119, 0.12) 42%,
+    transparent 72%
+  );
+  animation: fr-drift-a 22s ease-in-out infinite;
 }
 
+/* Top-right: magenta / soft purple — second mass for depth */
 .fr-orb--pink {
-  width: 38vmax;
-  height: 38vmax;
-  top: -10vmax;
+  width: 40vmax;
+  height: 40vmax;
+  top: -11vmax;
   right: -14vmax;
-  background: var(--fr-gradient-glow-accent);
+  background: radial-gradient(
+    closest-side,
+    rgba(192, 38, 211, 0.16) 0%,
+    rgba(168, 54, 225, 0.1) 48%,
+    transparent 74%
+  );
+  animation: fr-drift-b 28s ease-in-out infinite;
 }
 
+/* Bottom band: peach-rose + lilac floor glow */
 .fr-orb--blue {
-  width: 34vmax;
-  height: 34vmax;
-  bottom: -16vmax;
-  left: 30%;
-  background: var(--fr-gradient-glow-info);
+  width: 42vmax;
+  height: 36vmax;
+  bottom: -18vmax;
+  left: 26%;
+  background:
+    radial-gradient(
+      closest-side,
+      rgba(251, 113, 133, 0.14) 0%,
+      rgba(251, 113, 133, 0.06) 50%,
+      transparent 74%
+    ),
+    radial-gradient(
+      closest-side at 65% 35%,
+      rgba(147, 51, 234, 0.1) 0%,
+      transparent 68%
+    );
+  animation: fr-drift-c 32s ease-in-out infinite;
+}
+
+/* Additional soft vignette orb for energetic center lift — subtle */
+.fr-orb--peach {
+  width: 30vmax;
+  height: 30vmax;
+  top: 22%;
+  left: 44%;
+  background: radial-gradient(
+    closest-side,
+    rgba(255, 228, 236, 0.9) 0%,
+    rgba(252, 231, 243, 0.45) 55%,
+    transparent 76%
+  );
+  filter: blur(42px);
+  opacity: 0.9;
+  animation: fr-drift-a 26s ease-in-out infinite reverse;
+}
+
+@keyframes fr-drift-a {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(18px, 14px, 0) scale(1.03); }
+}
+
+@keyframes fr-drift-b {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(-16px, 12px, 0) scale(1.04); }
+}
+
+@keyframes fr-drift-c {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(10px, -14px, 0) scale(1.02); }
 }
 
 @media (max-width: 48rem) {
-  /* Dampen orb sizes on small screens so text areas stay calm. */
+  .fr-atmosphere {
+    background:
+      radial-gradient(120% 70% at 50% 0%, rgba(252, 231, 243, 0.85) 0%, transparent 62%),
+      linear-gradient(180deg, #fff1f6 0%, #fdf2f8 42%, #ffffff 100%);
+  }
+
   .fr-orb--violet {
-    width: 60vmax;
-    height: 60vmax;
+    width: 62vmax;
+    height: 62vmax;
+    filter: blur(48px);
   }
 
   .fr-orb--pink,
-  .fr-orb--blue {
-    opacity: 0.6;
+  .fr-orb--blue,
+  .fr-orb--peach {
+    opacity: 0.55;
+    filter: blur(44px);
   }
 }

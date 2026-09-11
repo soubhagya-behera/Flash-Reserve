@@ -1,6 +1,7 @@
 /* ============================================================
    FlashReserve — Button primitive
-   Two variants: brand gradient (primary) and quiet surface (ghost).
+   Premium SaaS: deep-pink → rose → magenta gradient primary,
+   rose-tinted ghost, danger. All states guarantee contrast.
    ============================================================ */
 
 .fr-btn {
@@ -8,63 +9,124 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.7rem 1.4rem;
+  padding: 0.72rem 1.5rem;
   border: 1px solid transparent;
   border-radius: var(--fr-radius-full);
   font-family: var(--fr-font-body);
   font-size: var(--fr-text-sm);
-  font-weight: 600;
+  font-weight: 650;
   letter-spacing: 0.01em;
   text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
   transition:
     transform var(--fr-dur-fast) var(--fr-ease),
     box-shadow var(--fr-dur-fast) var(--fr-ease),
-    background-color var(--fr-dur-fast) var(--fr-ease),
-    border-color var(--fr-dur-fast) var(--fr-ease);
+    background var(--fr-dur-fast) var(--fr-ease),
+    border-color var(--fr-dur-fast) var(--fr-ease),
+    color var(--fr-dur-fast) var(--fr-ease),
+    filter var(--fr-dur-fast) var(--fr-ease);
 }
 
 .fr-btn:focus-visible {
+  outline: 2px solid var(--fr-primary);
   outline-offset: 3px;
 }
 
+/* ---------- Primary: deep-pink → rose → magenta gradient ---------- */
 .fr-btn--primary {
   background-image: var(--fr-gradient-brand);
   color: var(--fr-ink-on-brand);
-  box-shadow: var(--fr-shadow-glow);
+  border-color: rgba(190, 24, 93, 0.18);
+  box-shadow:
+    0 1px 2px rgba(36, 19, 51, 0.08),
+    var(--fr-shadow-glow);
 }
 
 .fr-btn--primary:hover {
+  background-image: var(--fr-gradient-brand-hover);
+  color: var(--fr-ink-on-brand);
+  border-color: rgba(165, 15, 77, 0.22);
   transform: translateY(-1px);
-  filter: saturate(1.08);
-  box-shadow: var(--fr-shadow-glow);
+  box-shadow:
+    0 4px 14px rgba(36, 19, 51, 0.1),
+    var(--fr-shadow-glow-hover);
 }
 
+.fr-btn--primary:active {
+  background-image: var(--fr-gradient-brand-hover);
+  color: var(--fr-ink-on-brand);
+  transform: translateY(0);
+  filter: brightness(0.97);
+  box-shadow: 0 2px 10px rgba(190, 24, 93, 0.3);
+}
+
+.fr-btn--primary:disabled,
+.fr-btn--primary[aria-disabled='true'] {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* ---------- Ghost: white surface, rose hover ---------- */
 .fr-btn--ghost {
-  background-color: var(--fr-surface);
-  border-color: var(--fr-border-strong);
+  background-color: rgba(255, 255, 255, 0.92);
+  border-color: var(--fr-border);
   color: var(--fr-text-soft);
   box-shadow: var(--fr-shadow-sm);
 }
 
 .fr-btn--ghost:hover {
+  background-color: #fff7fb;
   border-color: var(--fr-primary);
   color: var(--fr-primary-strong);
   transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(190, 24, 93, 0.12);
 }
 
-/* Danger variant for destructive confirmations (admin flows). */
+.fr-btn--ghost:active {
+  background-color: var(--fr-primary-soft);
+  border-color: var(--fr-primary-strong);
+  color: var(--fr-primary-strong);
+  transform: translateY(0);
+  box-shadow: var(--fr-shadow-sm);
+}
+
+/* Navbar ghost links reuse this but must stay readable — ensure anchors render like buttons */
+a.fr-btn--ghost,
+a.fr-btn--primary {
+  text-decoration: none;
+}
+
+a.fr-btn--ghost:hover,
+a.fr-btn--primary:hover {
+  text-decoration: none;
+}
+
+/* ---------- Danger ---------- */
 .fr-btn--danger {
   background-color: var(--fr-danger);
   color: var(--fr-ink-on-brand);
+  border-color: rgba(207, 61, 94, 0.2);
   box-shadow: var(--fr-shadow-sm);
 }
 
 .fr-btn--danger:hover {
   background-color: #b73250;
+  color: var(--fr-ink-on-brand);
+  border-color: rgba(183, 50, 80, 0.28);
   transform: translateY(-1px);
 }
 
-/* Compact variant for the navigation bar. */
+.fr-btn--danger:active {
+  background-color: #9f2b44;
+  color: var(--fr-ink-on-brand);
+  transform: translateY(0);
+}
+
+/* ---------- Compact (navbar) — consistent heights ---------- */
 .fr-btn--compact {
-  padding: 0.5rem 1.05rem;
+  padding: 0.52rem 1.1rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  min-height: 2.125rem;
 }
