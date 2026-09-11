@@ -96,6 +96,11 @@ export default function LoginPage() {
               error={fieldErrors.password}
               disabled={submitting}
             />
+            <div style={{ textAlign: 'right', marginTop: '-0.25rem' }}>
+              <Link to="/forgot-password" className="auth__switch-link" style={{ fontSize: '0.8125rem' }}>
+                Forgot password?
+              </Link>
+            </div>
             <Button type="submit" disabled={submitting} className="auth__submit">
               {submitting ? 'Signing in…' : 'Sign in'}
             </Button>

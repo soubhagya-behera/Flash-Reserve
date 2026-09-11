@@ -1,10 +1,6 @@
 package com.soubhagya.flashreserve.service;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.SecureRandom;
 import java.time.Duration;
-import java.util.HexFormat;
 import java.util.concurrent.TimeUnit;
 
 import com.soubhagya.flashreserve.config.RegistrationOtpProperties;
@@ -45,7 +41,6 @@ public class RegistrationOtpService {
 	private static final String KEY_SENDCOUNT = "flashreserve:otp:sendcount:";
 
 	private static final Duration VERIFIED_TTL = Duration.ofMinutes(10);
-	private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
 	private final RedissonClient redisson;
 	private final RegistrationOtpProperties props;
@@ -56,15 +51,15 @@ public class RegistrationOtpService {
 
 	public void sendOtp(String rawName, String rawEmail) {
 		String name = rawName == null ? "" : rawName.trim();
-		String email = normalizeEmail(rawEmail);
-		validateName(name);
-		validateGmail(email);
+		String email = OtpSupport.normalizeEmail(rawEmail);
+		OtpSupport.validateName(name);
+		OtpSupport.validateGmail(email);
 		if (userRepository.existsByEmail(email)) {
 			throw new DuplicateEmailException("Email already registered");
 		}
 		enforceSendLimits(email);
-		String otp = generateOtp();
-		String hash = hashOtp(otp);
+		String otp = OtpSupport.generateOtp();
+		String hash = OtpSupport.hashOtp(otp);
 		OtpState state = new OtpState(name, email, hash, props.maxAttempts(), false,
 				System.currentTimeMillis(), 0L);
 		codeBucket(email).set(state, props.ttl().toMillis(), TimeUnit.MILLISECONDS);
@@ -78,8 +73,8 @@ public class RegistrationOtpService {
 	}
 
 	public void verifyOtp(String rawEmail, String code) {
-		String email = normalizeEmail(rawEmail);
-		validateGmail(email);
+		String email = OtpSupport.normalizeEmail(rawEmail);
+		OtpSupport.validateGmail(email);
 		if (code == null || !code.matches("^[0-9]{6}$")) {
 			throw new OtpVerificationException(HttpStatus.BAD_REQUEST, "Invalid verification code");
 		}
@@ -98,7 +93,7 @@ public class RegistrationOtpService {
 			throw new OtpVerificationException(HttpStatus.TOO_MANY_REQUESTS,
 					"Too many incorrect attempts. Please request a new code.");
 		}
-		String hash = hashOtp(code);
+		String hash = OtpSupport.hashOtp(code);
 		if (!hash.equals(state.otpHash)) {
 			int remaining = state.attemptsRemaining - 1;
 			if (remaining <= 0) {
@@ -120,39 +115,13 @@ public class RegistrationOtpService {
 	}
 
 	public boolean isVerified(String rawEmail) {
-		String email = normalizeEmail(rawEmail);
+		String email = OtpSupport.normalizeEmail(rawEmail);
 		return verifiedBucket(email).isExists();
 	}
 
 	public void consumeVerified(String rawEmail) {
-		String email = normalizeEmail(rawEmail);
+		String email = OtpSupport.normalizeEmail(rawEmail);
 		verifiedBucket(email).delete();
-	}
-
-	// ---- validation helpers ----
-
-	public static void validateGmail(String email) {
-		if (email == null || !email.toLowerCase().endsWith("@gmail.com")) {
-			throw new OtpVerificationException(HttpStatus.BAD_REQUEST,
-					"Only Gmail addresses (@gmail.com) are allowed");
-		}
-		// Basic shape already validated by @Email, but reject obvious bad forms fast.
-		if (email.length() > 255 || email.length() < 7) {
-			throw new OtpVerificationException(HttpStatus.BAD_REQUEST, "Invalid Gmail address");
-		}
-	}
-
-	public static void validateName(String name) {
-		if (name == null || name.isBlank()) {
-			throw new OtpVerificationException(HttpStatus.BAD_REQUEST, "Name is required");
-		}
-		if (name.length() > 100) {
-			throw new OtpVerificationException(HttpStatus.BAD_REQUEST, "Name must not exceed 100 characters");
-		}
-	}
-
-	public static String normalizeEmail(String email) {
-		return email == null ? "" : email.trim().toLowerCase();
 	}
 
 	private void enforceSendLimits(String email) {
@@ -181,20 +150,7 @@ public class RegistrationOtpService {
 		}
 	}
 
-	private static String generateOtp() {
-		int n = SECURE_RANDOM.nextInt(1_000_000);
-		return String.format("%06d", n);
-	}
 
-	static String hashOtp(String otp) {
-		try {
-			MessageDigest md = MessageDigest.getInstance("SHA-256");
-			byte[] digest = md.digest(otp.getBytes(StandardCharsets.UTF_8));
-			return HexFormat.of().formatHex(digest);
-		} catch (Exception ex) {
-			throw new IllegalStateException("SHA-256 unavailable", ex);
-		}
-	}
 
 	private RBucket<OtpState> codeBucket(String email) {
 		return redisson.getBucket(KEY_CODE + email);

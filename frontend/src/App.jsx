@@ -3,6 +3,7 @@ import Navigation from './components/navigation/Navigation.jsx'
 import LandingPage from './pages/LandingPage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
 import RegisterPage from './pages/RegisterPage.jsx'
+import ForgotPasswordPage from './pages/ForgotPasswordPage.jsx'
 import EventsPage from './pages/EventsPage.jsx'
 import EventDetailPage from './pages/EventDetailPage.jsx'
 import BookingsPage from './pages/BookingsPage.jsx'
@@ -110,6 +111,7 @@ function App() {
         />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>

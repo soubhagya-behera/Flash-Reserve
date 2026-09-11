@@ -9,6 +9,7 @@ import com.soubhagya.flashreserve.entity.enums.UserRole;
 import com.soubhagya.flashreserve.exception.DuplicateEmailException;
 import com.soubhagya.flashreserve.exception.OtpVerificationException;
 import com.soubhagya.flashreserve.security.JwtService;
+import com.soubhagya.flashreserve.service.OtpSupport;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -40,8 +41,8 @@ public class AuthService {
 	 * marker in Redis (set by verify-otp). The marker is consumed on success.
 	 */
 	public AuthResponse register(RegisterRequest request) {
-		String email = RegistrationOtpService.normalizeEmail(request.email());
-		RegistrationOtpService.validateGmail(email);
+		String email = OtpSupport.normalizeEmail(request.email());
+		OtpSupport.validateGmail(email);
 		if (!registrationOtpService.isVerified(email)) {
 			throw new OtpVerificationException(HttpStatus.BAD_REQUEST,
 					"Email not verified. Please verify your email with the OTP first");

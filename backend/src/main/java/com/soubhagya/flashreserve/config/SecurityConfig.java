@@ -41,7 +41,9 @@ public class SecurityConfig {
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/register/send-otp",
-								"/api/auth/register/verify-otp", "/api/auth/login").permitAll()
+								"/api/auth/register/verify-otp", "/api/auth/login",
+								"/api/auth/forgot-password/send-otp", "/api/auth/forgot-password/verify-otp",
+								"/api/auth/forgot-password/reset").permitAll()
 						.requestMatchers(HttpMethod.GET, "/api/events", "/api/events/*", "/api/events/*/seats", "/api/events/*/seat-updates").permitAll()
 						.requestMatchers(HttpMethod.POST, "/api/events/*/seats/*/reservations").hasRole("USER")
 						.requestMatchers(HttpMethod.GET, "/api/bookings", "/api/bookings/*").hasRole("USER")

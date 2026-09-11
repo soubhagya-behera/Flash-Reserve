@@ -36,6 +36,16 @@ export function verifyRegisterOtp({ email, code }) {
   })
 }
 
+export function forgotSendOtp({ email }) {
+  return apiRequest('/api/auth/forgot-password/send-otp', { method: 'POST', body: { email } })
+}
+export function forgotVerifyOtp({ email, code }) {
+  return apiRequest('/api/auth/forgot-password/verify-otp', { method: 'POST', body: { email, code } })
+}
+export function forgotReset({ email, recoveryToken, newPassword }) {
+  return apiRequest('/api/auth/forgot-password/reset', { method: 'POST', body: { email, recoveryToken, newPassword } })
+}
+
 export function register({ name, email, password }) {
   return apiRequest('/api/auth/register', {
     method: 'POST',
