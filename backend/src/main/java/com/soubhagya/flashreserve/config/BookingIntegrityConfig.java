@@ -11,33 +11,25 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
- * Defense-in-depth integrity guard for the reservation hot path (SEC-03).
+ * Defense-in-depth integrity validator for the reservation hot path (SEC-03).
  *
- * The reservation flow stays exactly as before: per-seat Redis locking first,
- * then a short PostgreSQL transaction guarded by Seat {@code @Version}
- * optimistic locking as the authoritative correctness mechanism. This guard
- * adds one PostgreSQL partial unique index underneath, so even a complete
- * bypass of both application layers (two nodes racing without the Redis lock
- * AND with a stale seat read) can never persist two PENDING bookings for the
- * same seat:
- *
+ * Flyway now owns all schema DDL via {@code V1__initial_schema.sql}, including
+ * the PostgreSQL partial unique index:
  * <pre>
- * CREATE UNIQUE INDEX IF NOT EXISTS uk_bookings_one_pending_per_seat
- * ON bookings (seat_id)
- * WHERE status = 'PENDING';
+ * CREATE UNIQUE INDEX uk_bookings_one_pending_per_seat
+ * ON bookings (seat_id) WHERE status = 'PENDING';
  * </pre>
+ * This guard no longer creates schema — it only <em>validates</em> that the
+ * index exists after Flyway has run. Any failure propagates and fails startup
+ * so a missing safety net is never silently ignored. The original
+ * {@code CREATE UNIQUE INDEX IF NOT EXISTS} approach would have masked a
+ * missing Flyway migration, which is why this class now validates instead of
+ * mutating schema. It is kept for one release as a defense-in-depth check
+ * and will be removed once Flyway ownership is proven in production.
  *
  * The predicate keeps the guarantee narrow: a seat with a settled history
  * (CONFIRMED / EXPIRED / CANCELLED rows) can still be re-reserved, but two
  * live PENDING holds for one seat are rejected by PostgreSQL itself.
- *
- * No Flyway/Liquibase is introduced. The DDL runs once at startup through
- * plain {@link JdbcTemplate}; any failure propagates and fails startup so a
- * missing safety net is never silently ignored. In particular, pre-existing
- * duplicate PENDING rows abort startup with the PostgreSQL unique-violation
- * instead of being cleaned up automatically - the operator resolves the data
- * first, then restarts. Keep the SQL above as the documented manual migration
- * for operators who prefer to apply it themselves.
  */
 @Configuration
 public class BookingIntegrityConfig {
@@ -45,17 +37,26 @@ public class BookingIntegrityConfig {
 	private static final Logger log = LoggerFactory.getLogger(BookingIntegrityConfig.class);
 
 	/**
-	 * Exact DDL enforced at startup. Keep in sync with the documented manual
-	 * migration SQL in the class javadoc.
+	 * Exact predicate documented for operators. Keep in sync with
+	 * V1__initial_schema.sql.
 	 */
-	static final String PENDING_PER_SEAT_DDL = "CREATE UNIQUE INDEX IF NOT EXISTS "
-			+ "uk_bookings_one_pending_per_seat ON bookings (seat_id) WHERE status = 'PENDING'";
+	static final String PENDING_PER_SEAT_DDL = "CREATE UNIQUE INDEX uk_bookings_one_pending_per_seat "
+			+ "ON bookings (seat_id) WHERE status = 'PENDING'";
+
+	static final String PENDING_PER_SEAT_INDEX = "uk_bookings_one_pending_per_seat";
 
 	@Bean
 	ApplicationRunner bookingIntegrityGuard(DataSource dataSource) {
 		return args -> {
-			new JdbcTemplate(dataSource).execute(PENDING_PER_SEAT_DDL);
-			log.info("Booking integrity guard ready: uk_bookings_one_pending_per_seat enforced");
+			Integer count = new JdbcTemplate(dataSource).queryForObject(
+					"SELECT COUNT(*) FROM pg_indexes WHERE indexname = ?", Integer.class,
+					PENDING_PER_SEAT_INDEX);
+			if (count == null || count == 0) {
+				throw new IllegalStateException(
+						"Required index missing: " + PENDING_PER_SEAT_INDEX
+								+ " — Flyway migration V1 must create it. Expected: " + PENDING_PER_SEAT_DDL);
+			}
+			log.info("Booking integrity guard ready: {} verified (Flyway-owned)", PENDING_PER_SEAT_INDEX);
 		};
 	}
 
