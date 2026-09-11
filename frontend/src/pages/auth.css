@@ -54,12 +54,108 @@
   border-radius: var(--fr-radius-sm);
 }
 
+.auth__steps {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: var(--fr-space-xs);
+}
+
+.auth__step {
+  width: 1.75rem;
+  height: 1.75rem;
+  display: inline-grid;
+  place-items: center;
+  border-radius: var(--fr-radius-full);
+  border: 1px solid var(--fr-border);
+  background: var(--fr-surface);
+  color: var(--fr-text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.auth__step--active {
+  background: var(--fr-gradient-brand);
+  color: white;
+  border-color: transparent;
+  box-shadow: var(--fr-shadow-glow);
+}
+
+.auth__step--done {
+  background: var(--fr-primary-soft);
+  color: var(--fr-primary-strong);
+  border-color: var(--fr-border);
+}
+
 .auth__title {
   margin-top: var(--fr-space-xs);
 }
 
 .auth__subtitle {
   margin-bottom: var(--fr-space-sm);
+}
+
+.auth__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.auth__link {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: var(--fr-text-sm);
+  font-weight: 600;
+  color: var(--fr-primary-strong);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.auth__link:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.auth__link:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.auth__link--center {
+  text-align: center;
+  width: 100%;
+}
+
+.fr-otp {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: space-between;
+}
+
+.fr-otp__input {
+  width: 100%;
+  max-width: 3rem;
+  height: 3rem;
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border: 1px solid var(--fr-border-strong);
+  border-radius: var(--fr-radius-md);
+  background: var(--fr-surface);
+  color: var(--fr-text);
+  transition: border-color var(--fr-dur-fast) var(--fr-ease), box-shadow var(--fr-dur-fast) var(--fr-ease);
+}
+
+.fr-otp__input:focus-visible {
+  outline: 2px solid var(--fr-primary);
+  outline-offset: 1px;
+  border-color: var(--fr-primary);
+  box-shadow: 0 0 0 4px var(--fr-primary-soft);
+}
+
+.fr-otp__input--invalid {
+  border-color: var(--fr-danger);
+  background: var(--fr-danger-soft);
 }
 
 .auth__form {

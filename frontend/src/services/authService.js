@@ -22,6 +22,20 @@ function toAuthResult(data) {
   }
 }
 
+export function sendRegisterOtp({ name, email }) {
+  return apiRequest('/api/auth/register/send-otp', {
+    method: 'POST',
+    body: { name, email },
+  })
+}
+
+export function verifyRegisterOtp({ email, code }) {
+  return apiRequest('/api/auth/register/verify-otp', {
+    method: 'POST',
+    body: { email, code },
+  })
+}
+
 export function register({ name, email, password }) {
   return apiRequest('/api/auth/register', {
     method: 'POST',

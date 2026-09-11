@@ -7,9 +7,11 @@ import com.soubhagya.flashreserve.dto.auth.UserResponse;
 import com.soubhagya.flashreserve.entity.User;
 import com.soubhagya.flashreserve.entity.enums.UserRole;
 import com.soubhagya.flashreserve.exception.DuplicateEmailException;
+import com.soubhagya.flashreserve.exception.OtpVerificationException;
 import com.soubhagya.flashreserve.security.JwtService;
 
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -27,20 +29,31 @@ public class AuthService {
 
 	private final JwtService jwtService;
 
+	private final RegistrationOtpService registrationOtpService;
+
 	/**
 	 * The {@code uk_users_email} unique constraint is the final race-safe
 	 * protection: two concurrent registrations can both pass the pre-check,
 	 * but only one insert can win. The loser surfaces as an expected 409
 	 * {@link DuplicateEmailException}, never a 500.
+	 * Gmail OTP verification is mandatory: the email must have a verified
+	 * marker in Redis (set by verify-otp). The marker is consumed on success.
 	 */
 	public AuthResponse register(RegisterRequest request) {
-		if (userService.existsByEmail(request.email())) {
+		String email = RegistrationOtpService.normalizeEmail(request.email());
+		RegistrationOtpService.validateGmail(email);
+		if (!registrationOtpService.isVerified(email)) {
+			throw new OtpVerificationException(HttpStatus.BAD_REQUEST,
+					"Email not verified. Please verify your email with the OTP first");
+		}
+		if (userService.existsByEmail(email)) {
 			throw new DuplicateEmailException("Email already registered");
 		}
 		String encodedPassword = passwordEncoder.encode(request.password());
 		try {
-			User user = userService.createUser(request.name(), request.email(),
+			User user = userService.createUser(request.name(), email,
 					encodedPassword, UserRole.USER);
+			registrationOtpService.consumeVerified(email);
 			return buildAuthResponse(user);
 		}
 		catch (DataIntegrityViolationException ex) {

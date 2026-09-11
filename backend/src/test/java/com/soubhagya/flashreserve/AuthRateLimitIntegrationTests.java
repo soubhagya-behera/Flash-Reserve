@@ -1,6 +1,7 @@
 package com.soubhagya.flashreserve;
 
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 
 import com.soubhagya.flashreserve.entity.User;
 import com.soubhagya.flashreserve.entity.enums.UserRole;
@@ -25,6 +26,8 @@ import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import org.springframework.transaction.annotation.Transactional;
 
+import org.redisson.api.RedissonClient;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -40,7 +43,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *
  * Each test uses a fresh random TEST-NET-1 client IP so its Redis bucket is
  * isolated from other tests and from previous runs (buckets outlive the
- * rolled-back test transactions).
+ * rolled-back test transactions). Registration now requires a Gmail OTP
+ * verification marker — tests seed the verified bucket directly so the rate
+ * limiter is exercised rather than the OTP flow.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -68,6 +73,14 @@ class AuthRateLimitIntegrationTests {
 	@Autowired
 	private PasswordEncoder passwordEncoder;
 
+	@Autowired
+	private RedissonClient redissonClient;
+
+	private void markVerified(String email) {
+		String key = "flashreserve:otp:verified:" + email.toLowerCase();
+		redissonClient.getBucket(key).set(email.toLowerCase(), 10, TimeUnit.MINUTES);
+	}
+
 	private String randomClientIp() {
 		return "192.0.2." + ThreadLocalRandom.current().nextInt(2, 255);
 	}
@@ -90,6 +103,7 @@ class AuthRateLimitIntegrationTests {
 	}
 
 	private int attemptRegistration(String ip, String email) throws Exception {
+		markVerified(email);
 		String body = "{\"name\":\"Rate Limited User\",\"email\":\"%s\",\"password\":\"password-123\"}"
 				.formatted(email);
 		MvcResult result = mockMvc.perform(post(REGISTER_URL)
@@ -124,18 +138,19 @@ class AuthRateLimitIntegrationTests {
 	@Test
 	void excessiveRegistrationsReturn429WithRetryAfter() throws Exception {
 		String ip = randomClientIp();
-		String ipTag = String.valueOf(ip.hashCode());
+		String ipTag = String.valueOf(Math.abs(ip.hashCode()));
 
 		for (int i = 0; i < 3; i++) {
-			assertThat(attemptRegistration(ip, "rl-reg-" + ipTag + "-" + i + "@example.test"))
+			assertThat(attemptRegistration(ip, "rl-reg-" + ipTag + "-" + i + "@gmail.com"))
 					.as("pre-limit registration attempts must succeed")
 					.isEqualTo(HttpStatus.CREATED.value());
 		}
 
+		markVerified("rl-reg-overflow" + ipTag + "@gmail.com");
 		mockMvc.perform(post(REGISTER_URL)
 						.contentType(MediaType.APPLICATION_JSON)
 						.content("{\"name\":\"Rate Limited User\","
-								+ "\"email\":\"rl-reg-overflow" + ipTag + "@example.test\","
+								+ "\"email\":\"rl-reg-overflow" + ipTag + "@gmail.com\","
 								+ "\"password\":\"password-123\"}")
 						.with(fromClientIp(ip)))
 				.andExpect(status().isTooManyRequests())
@@ -145,7 +160,7 @@ class AuthRateLimitIntegrationTests {
 	@Test
 	void exhaustedLoginLimitDoesNotBlockRegistrationForTheSameClient() throws Exception {
 		String ip = randomClientIp();
-		String ipTag = String.valueOf(ip.hashCode());
+		String ipTag = String.valueOf(Math.abs(ip.hashCode()));
 
 		for (int i = 0; i < 3; i++) {
 			attemptLogin(ip, "rl-scopes@example.test", "wrong-password");
@@ -154,7 +169,7 @@ class AuthRateLimitIntegrationTests {
 				.as("login bucket is exhausted")
 				.isEqualTo(HttpStatus.TOO_MANY_REQUESTS.value());
 
-		assertThat(attemptRegistration(ip, "rl-scopes-" + ipTag + "@example.test"))
+		assertThat(attemptRegistration(ip, "rl-scopes-" + ipTag + "@gmail.com"))
 				.as("registration has its own bucket and still works")
 				.isEqualTo(HttpStatus.CREATED.value());
 	}

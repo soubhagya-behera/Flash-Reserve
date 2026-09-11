@@ -21,6 +21,21 @@ export function validateEmail(value) {
   return null
 }
 
+export function validateGmail(value) {
+  const emailError = validateEmail(value)
+  if (emailError) return emailError
+  if (!value.trim().toLowerCase().endsWith('@gmail.com')) {
+    return 'Only Gmail addresses (@gmail.com) are allowed'
+  }
+  return null
+}
+
+export function validateOtp(value) {
+  if (!value) return 'Verification code is required'
+  if (!/^[0-9]{6}$/.test(value)) return 'Enter the 6-digit code'
+  return null
+}
+
 export function validatePassword(value, { requireLength = true } = {}) {
   if (!value) return 'Password is required'
   if (requireLength && (value.length < 8 || value.length > 72)) {

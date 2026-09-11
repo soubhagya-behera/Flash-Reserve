@@ -77,6 +77,11 @@ public class ApiExceptionHandler {
 		return build(HttpStatus.UNAUTHORIZED, ex.getMessage(), request);
 	}
 
+	@ExceptionHandler(OtpVerificationException.class)
+	public ResponseEntity<ApiError> handleOtpVerification(OtpVerificationException ex, HttpServletRequest request) {
+		return build(ex.status(), ex.getMessage(), request);
+	}
+
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException ex, HttpServletRequest request) {
 		Map<String, String> fieldErrors = new LinkedHashMap<>();

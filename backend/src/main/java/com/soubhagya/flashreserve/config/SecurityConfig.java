@@ -40,7 +40,8 @@ public class SecurityConfig {
 				.csrf(AbstractHttpConfigurer::disable)
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(auth -> auth
-						.requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
+						.requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/register/send-otp",
+								"/api/auth/register/verify-otp", "/api/auth/login").permitAll()
 						.requestMatchers(HttpMethod.GET, "/api/events", "/api/events/*", "/api/events/*/seats", "/api/events/*/seat-updates").permitAll()
 						.requestMatchers(HttpMethod.POST, "/api/events/*/seats/*/reservations").hasRole("USER")
 						.requestMatchers(HttpMethod.GET, "/api/bookings", "/api/bookings/*").hasRole("USER")

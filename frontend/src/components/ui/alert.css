@@ -41,3 +41,12 @@
 .fr-alert--info .fr-alert__mark {
   background: var(--fr-info);
 }
+
+.fr-alert--success {
+  border-color: #b7e2c9;
+  background: #eef8f1;
+}
+
+.fr-alert--success .fr-alert__mark {
+  background: var(--fr-success);
+}

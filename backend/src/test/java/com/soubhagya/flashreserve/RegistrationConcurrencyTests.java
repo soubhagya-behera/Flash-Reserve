@@ -24,6 +24,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import org.springframework.test.context.TestPropertySource;
 
+import org.redisson.api.RedissonClient;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -31,6 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * every loser must surface as the expected duplicate-email conflict (-> 409),
  * never a 500. Runs without a test transaction because each registration
  * commits in its own database transaction, exactly as in production.
+ * Gmail OTP verification is seeded directly in Redis for this test.
  */
 @SpringBootTest
 @TestPropertySource(properties = {
@@ -47,6 +50,9 @@ class RegistrationConcurrencyTests {
 	@Autowired
 	private UserRepository userRepository;
 
+	@Autowired
+	private RedissonClient redissonClient;
+
 	private String registeredEmail;
 
 	@AfterEach
@@ -58,8 +64,13 @@ class RegistrationConcurrencyTests {
 
 	@Test
 	void concurrentDuplicateRegistrationCreatesExactlyOneUser() throws Exception {
-		registeredEmail = "concurrent-reg-" + UUID.randomUUID() + "@example.test";
+		registeredEmail = "concurrent-reg-" + UUID.randomUUID() + "@gmail.com";
 		RegisterRequest request = new RegisterRequest("Concurrent User", registeredEmail, "password-123");
+		// Seed verified marker — registration consumes it, but the first winner
+		// will create the user; losers will hit duplicate check before consume.
+		// Re-seed so all threads see verified at entry; concurrency still proves uniqueness.
+		redissonClient.getBucket("flashreserve:otp:verified:" + registeredEmail.toLowerCase())
+				.set(registeredEmail.toLowerCase(), 10, TimeUnit.MINUTES);
 
 		ExecutorService pool = Executors.newFixedThreadPool(THREADS);
 		CountDownLatch startGate = new CountDownLatch(1);
@@ -67,6 +78,10 @@ class RegistrationConcurrencyTests {
 		for (int i = 0; i < THREADS; i++) {
 			results.add(pool.submit((Callable<Object>) () -> {
 				startGate.await();
+				// Each thread needs verified state because first success consumes it.
+				// Re-set before each attempt so later threads still hit the DB constraint path.
+				redissonClient.getBucket("flashreserve:otp:verified:" + registeredEmail.toLowerCase())
+						.set(registeredEmail.toLowerCase(), 10, TimeUnit.MINUTES);
 				try {
 					return authService.register(request);
 				}

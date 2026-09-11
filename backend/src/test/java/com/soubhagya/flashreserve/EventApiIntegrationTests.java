@@ -31,6 +31,12 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
+
+import org.redisson.api.RedissonClient;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import static org.hamcrest.Matchers.everyItem;
@@ -78,6 +84,22 @@ class EventApiIntegrationTests {
 	@Autowired
 	private JwtService jwtService;
 
+	@Autowired
+	private RedissonClient redissonClient;
+
+	private void markVerified(String email) {
+		redissonClient.getBucket("flashreserve:otp:verified:" + email.toLowerCase())
+				.set(email.toLowerCase(), 10, TimeUnit.MINUTES);
+	}
+
+	private String randomIp() {
+		return "192.0.2." + ThreadLocalRandom.current().nextInt(10, 250);
+	}
+
+	private RequestPostProcessor fromIp(String ip) {
+		return req -> { req.setRemoteAddr(ip); return req; };
+	}
+
 	private String adminToken() {
 		User admin = userRepository.save(new User("Admin", "event-admin@example.test",
 				passwordEncoder.encode("admin-password-123"), UserRole.ADMIN));
@@ -85,13 +107,16 @@ class EventApiIntegrationTests {
 	}
 
 	private String userToken() throws Exception {
+		String email = "plain-user@gmail.com";
+		markVerified(email);
 		String body = """
-				{"name":"Plain User","email":"plain-user@example.test","password":"password-123"}""";
+				{"name":"Plain User","email":"%s","password":"password-123"}""".formatted(email);
 		mockMvc.perform(post("/api/auth/register")
+						.with(fromIp(randomIp()))
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(body))
 				.andExpect(status().isCreated());
-		User user = userRepository.findByEmail("plain-user@example.test").orElseThrow();
+		User user = userRepository.findByEmail(email).orElseThrow();
 		return jwtService.generateToken(user);
 	}
 

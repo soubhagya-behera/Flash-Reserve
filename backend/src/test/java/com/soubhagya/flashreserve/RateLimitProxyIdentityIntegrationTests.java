@@ -26,6 +26,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.concurrent.TimeUnit;
+import org.redisson.api.RedissonClient;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -64,6 +66,8 @@ class RateLimitProxyIdentityIntegrationTests {
 	private PasswordEncoder passwordEncoder;
 	@Autowired
 	private JwtService jwtService;
+	@Autowired
+	private RedissonClient redissonClient;
 	private String randomClientIp() {
 		return "192.0.2." + ThreadLocalRandom.current().nextInt(2, 255);
 	}
@@ -111,7 +115,9 @@ class RateLimitProxyIdentityIntegrationTests {
 			attemptLogin(peer, null);
 		}
 		assertThat(attemptLogin(peer, null)).isEqualTo(HttpStatus.TOO_MANY_REQUESTS.value());
-		String email = "rl-proxy-reg-" + tag + "@example.test";
+		String email = "rl-proxy-reg-" + tag + "@gmail.com";
+		redissonClient.getBucket("flashreserve:otp:verified:" + email.toLowerCase())
+				.set(email.toLowerCase(), 10, TimeUnit.MINUTES);
 		MvcResult result = mockMvc.perform(post("/api/auth/register")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("{\"name\":\"Proxy User\",\"email\":\"" + email + "\",\"password\":\"password-123\"}")

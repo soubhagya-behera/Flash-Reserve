@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import javax.crypto.SecretKey;
 
@@ -28,8 +29,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.concurrent.ThreadLocalRandom;
+
+import org.redisson.api.RedissonClient;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -70,6 +76,9 @@ class SecurityIntegrationTests {
 	@Autowired
 	private JwtService jwtService;
 
+	@Autowired
+	private RedissonClient redissonClient;
+
 	private static final String ADMIN_CREATE_BODY = """
 			{"name":"Sample Event","description":"d","venue":"Hall A","eventDate":"2027-01-01T18:00:00Z","totalSeats":5,"ticketPrice":250.00}""";
 
@@ -78,8 +87,24 @@ class SecurityIntegrationTests {
 				{"name":"Test User","email":"%s","password":"password-123"}""".formatted(email);
 	}
 
+	private void markVerified(String email) {
+		String key = "flashreserve:otp:verified:" + email.toLowerCase();
+		redissonClient.getBucket(key).set(email.toLowerCase(), 10, TimeUnit.MINUTES);
+	}
+
+	private String randomIp() {
+		return "192.0.2." + ThreadLocalRandom.current().nextInt(10, 250);
+	}
+
+	private RequestPostProcessor fromIp(String ip) {
+		return req -> { req.setRemoteAddr(ip); return req; };
+	}
+
 	private String registerAndGetToken(String email) throws Exception {
+		markVerified(email);
+		String ip = randomIp();
 		String response = mockMvc.perform(post(REGISTER_URL)
+						.with(fromIp(ip))
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(registerBody(email)))
 				.andExpect(status().isCreated())
@@ -89,15 +114,18 @@ class SecurityIntegrationTests {
 
 	@Test
 	void registrationSucceedsAndReturnsSafeAuthResponse() throws Exception {
+		String email = "register-ok@gmail.com";
+		markVerified(email);
 		mockMvc.perform(post(REGISTER_URL)
+						.with(fromIp(randomIp()))
 						.contentType(MediaType.APPLICATION_JSON)
-						.content(registerBody("register-ok@example.test")))
+						.content(registerBody(email)))
 				.andExpect(status().isCreated())
 				.andExpect(jsonPath("$.accessToken").isNotEmpty())
 				.andExpect(header().doesNotExist(HttpHeaders.AUTHORIZATION))
 				.andExpect(jsonPath("$.tokenType").value("Bearer"))
 				.andExpect(jsonPath("$.expiresIn").isNumber())
-				.andExpect(jsonPath("$.user.email").value("register-ok@example.test"))
+				.andExpect(jsonPath("$.user.email").value(email))
 				.andExpect(jsonPath("$.user.role").value("USER"))
 				.andExpect(jsonPath("$.user.password").doesNotExist())
 				.andExpect(jsonPath("$.password").doesNotExist());
@@ -105,14 +133,20 @@ class SecurityIntegrationTests {
 
 	@Test
 	void duplicateEmailRegistrationIsRejected() throws Exception {
+		String email = "duplicate@gmail.com";
+		markVerified(email);
 		mockMvc.perform(post(REGISTER_URL)
+						.with(fromIp(randomIp()))
 						.contentType(MediaType.APPLICATION_JSON)
-						.content(registerBody("duplicate@example.test")))
+						.content(registerBody(email)))
 				.andExpect(status().isCreated());
 
+		// Second attempt needs a fresh verified marker (first was consumed)
+		markVerified(email);
 		mockMvc.perform(post(REGISTER_URL)
+						.with(fromIp(randomIp()))
 						.contentType(MediaType.APPLICATION_JSON)
-						.content(registerBody("duplicate@example.test")))
+						.content(registerBody(email)))
 				.andExpect(status().isConflict())
 				.andExpect(jsonPath("$.message").value("Email already registered"));
 	}
@@ -155,25 +189,25 @@ class SecurityIntegrationTests {
 
 	@Test
 	void loginSucceedsWithValidCredentialsAndReturnsJwt() throws Exception {
-		registerAndGetToken("login-ok@example.test");
+		registerAndGetToken("login-ok@gmail.com");
 
 		String body = """
-				{"email":"login-ok@example.test","password":"password-123"}""";
+				{"email":"login-ok@gmail.com","password":"password-123"}""";
 		mockMvc.perform(post(LOGIN_URL)
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(body))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.accessToken").isNotEmpty())
 				.andExpect(jsonPath("$.tokenType").value("Bearer"))
-				.andExpect(jsonPath("$.user.email").value("login-ok@example.test"));
+				.andExpect(jsonPath("$.user.email").value("login-ok@gmail.com"));
 	}
 
 	@Test
 	void loginRejectsWrongPasswordWithGenericError() throws Exception {
-		registerAndGetToken("wrong-pass@example.test");
+		registerAndGetToken("wrong-pass@gmail.com");
 
 		String body = """
-				{"email":"wrong-pass@example.test","password":"definitely-wrong"}""";
+				{"email":"wrong-pass@gmail.com","password":"definitely-wrong"}""";
 		mockMvc.perform(post(LOGIN_URL)
 						.contentType(MediaType.APPLICATION_JSON)
 						.content(body))
@@ -226,7 +260,7 @@ class SecurityIntegrationTests {
 
 	@Test
 	void validUserTokenPassesSecurityLayerOnPublicEventListing() throws Exception {
-		String token = registerAndGetToken("role-user@example.test");
+		String token = registerAndGetToken("role-user@gmail.com");
 
 		mockMvc.perform(get(FUTURE_PROTECTED_PATH)
 						.header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
@@ -239,7 +273,7 @@ class SecurityIntegrationTests {
 
 	@Test
 	void userTokenIsForbiddenOnAdminArea() throws Exception {
-		String token = registerAndGetToken("admin-area-user@example.test");
+		String token = registerAndGetToken("admin-area-user@gmail.com");
 
 		mockMvc.perform(get(FUTURE_ADMIN_PATH)
 						.header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
