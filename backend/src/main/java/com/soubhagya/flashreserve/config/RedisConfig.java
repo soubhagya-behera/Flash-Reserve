@@ -9,9 +9,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Single Redis client for the application (Redisson), used for distributed
- * reservation locking only. PostgreSQL remains the source of truth for all
- * seat/booking state.
+ * Single Redis client for the application (Redisson): distributed reservation
+ * locking plus best-effort seat-update pub/sub. PostgreSQL remains the source
+ * of truth for all seat/booking state; pub/sub failure never affects
+ * correctness.
  */
 @Configuration
 public class RedisConfig {
@@ -23,6 +24,20 @@ public class RedisConfig {
 		config.useSingleServer()
 				.setAddress("redis://" + host + ":" + port);
 		return Redisson.create(config);
+	}
+
+	/**
+	 * One shared seat-update subscription per instance (never per browser).
+	 * Inbound envelopes go to the publisher, which drops this instance's own
+	 * echo by origin id and fans out the rest locally by event id.
+	 */
+	@Bean(destroyMethod = "removeAllListeners")
+	org.redisson.api.RTopic seatUpdatesTopic(RedissonClient redisson,
+			com.soubhagya.flashreserve.service.SeatStatusPublisher publisher) {
+		org.redisson.api.RTopic topic = redisson
+				.getTopic(com.soubhagya.flashreserve.service.SeatStatusPublisher.TOPIC_NAME);
+		topic.addListener(String.class, (channel, message) -> publisher.handleInbound(message));
+		return topic;
 	}
 
 }

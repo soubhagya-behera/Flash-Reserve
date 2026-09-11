@@ -41,8 +41,7 @@ public class SecurityConfig {
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
-						.requestMatchers(HttpMethod.GET, "/api/events", "/api/events/*", "/api/events/*/seats")
-						.permitAll()
+						.requestMatchers(HttpMethod.GET, "/api/events", "/api/events/*", "/api/events/*/seats", "/api/events/*/seat-updates").permitAll()
 						.requestMatchers(HttpMethod.POST, "/api/events/*/seats/*/reservations").hasRole("USER")
 						.requestMatchers(HttpMethod.GET, "/api/bookings", "/api/bookings/*").hasRole("USER")
 						.requestMatchers(HttpMethod.POST, "/api/bookings/*/cancel").hasRole("USER")

@@ -8,6 +8,7 @@ import java.util.UUID;
 import com.soubhagya.flashreserve.dto.payment.PaymentConfirmationResponse;
 import com.soubhagya.flashreserve.dto.payment.PaymentInitiationResponse;
 import com.soubhagya.flashreserve.dto.payment.PaymentVerificationRequest;
+import com.soubhagya.flashreserve.dto.event.SeatStatusEvent;
 import com.soubhagya.flashreserve.entity.Booking;
 import com.soubhagya.flashreserve.entity.Payment;
 import com.soubhagya.flashreserve.entity.Seat;
@@ -46,6 +47,13 @@ public class PaymentService {
 	private final ReservationLockService reservationLockService;
 
 	private final TransactionTemplate transactionTemplate;
+
+	private final SeatStatusPublisher seatStatusPublisher;
+
+	/** Slot indexes for the object holder passed into the confirming transaction. */
+	private static final int CONFIRMED_BOOKING = 0;
+
+	private static final int BOOKED_EVENT = 1;
 
 	public Payment getById(UUID id) {
 		return paymentRepository.findById(id)
@@ -155,7 +163,7 @@ public class PaymentService {
 
 		if (request.isFailed()) {
 			// The checkout failed client-side; release the hold consistently.
-			return transactionTemplate.execute(status -> markFailed(bookingId, payment.getId()));
+			return failAndPublish(bookingId, payment.getId());
 		}
 
 		if (!request.razorpayOrderId().equals(payment.getRazorpayOrderId())) {
@@ -167,8 +175,29 @@ public class PaymentService {
 			throw new PaymentVerificationException("Invalid payment signature.");
 		}
 
-		return transactionTemplate.execute(status -> confirm(bookingId, payment.getId(),
-				request.razorpayPaymentId()));
+		return confirmAndPublish(bookingId, payment.getId(), request.razorpayPaymentId());
+	}
+
+	private PaymentConfirmationResponse confirmAndPublish(UUID bookingId, UUID paymentId, String razorpayPaymentId) {
+		Object[] holder = new Object[2];
+		PaymentConfirmationResponse response = transactionTemplate
+				.execute(status -> holder[CONFIRMED_BOOKING] == null
+						? confirmInto(holder, bookingId, paymentId, razorpayPaymentId)
+						: null);
+		// The event was built INSIDE the transaction (Booking.seat/Seat.event
+		// are LAZY and detached afterwards); it is published strictly after
+		// the commit above succeeded.
+		seatStatusPublisher.publishAfterCommit((SeatStatusEvent) holder[BOOKED_EVENT]);
+		return response;
+	}
+
+	private PaymentConfirmationResponse confirmInto(Object[] holder, UUID bookingId, UUID paymentId,
+			String razorpayPaymentId) {
+		PaymentConfirmationResponse response = confirm(bookingId, paymentId, razorpayPaymentId);
+		Booking booked = bookingRepository.findById(bookingId).orElseThrow();
+		holder[CONFIRMED_BOOKING] = booked;
+		holder[BOOKED_EVENT] = SeatStatusEventFactory.booked(booked);
+		return response;
 	}
 
 	private PaymentConfirmationResponse confirm(UUID bookingId, UUID paymentId, String razorpayPaymentId) {
@@ -202,9 +231,19 @@ public class PaymentService {
 		return confirmationOf(bookingId);
 	}
 
-	private PaymentConfirmationResponse markFailed(UUID bookingId, UUID paymentId) {
+	private PaymentConfirmationResponse failAndPublish(UUID bookingId, UUID paymentId) {
+		SeatStatusEvent[] published = new SeatStatusEvent[1];
+		PaymentConfirmationResponse response = transactionTemplate.execute(status -> markFailed(bookingId, paymentId, published));
+		if (published[0] != null) {
+			seatStatusPublisher.publishAfterCommit(published[0]);
+		}
+		return response;
+	}
+
+	private PaymentConfirmationResponse markFailed(UUID bookingId, UUID paymentId, SeatStatusEvent[] published) {
 		Booking booking = bookingRepository.findById(bookingId)
 				.orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + bookingId));
+		boolean released = false;
 		if (booking.getStatus() == BookingStatus.PENDING) {
 			Seat seat = booking.getSeat();
 			if (seat.getStatus() == SeatStatus.HELD) {
@@ -216,12 +255,24 @@ public class PaymentService {
 					throw new InvalidStateTransitionException(
 							"Booking changed concurrently; payment not failed");
 				}
+				released = true;
 			}
 			booking.setStatus(BookingStatus.CANCELLED);
 		}
 		Payment payment = paymentRepository.findById(paymentId).orElseThrow();
 		payment.setStatus(PaymentStatus.FAILED);
+		if (released) {
+			// Built inside TX while LAZY associations are attached; published after commit.
+			Booking refreshed = bookingRepository.findById(bookingId).orElseThrow();
+			published[0] = SeatStatusEventFactory.available(refreshed);
+		}
 		return confirmationOf(bookingId);
+	}
+
+	private PaymentConfirmationResponse markFailed(UUID bookingId, UUID paymentId) {
+		SeatStatusEvent[] holder = new SeatStatusEvent[1];
+		PaymentConfirmationResponse r = markFailed(bookingId, paymentId, holder);
+		return r;
 	}
 
 	/**
@@ -276,8 +327,17 @@ public class PaymentService {
 		String refundId = paymentProvider.refundPayment(payment.getRazorpayPaymentId(),
 				payment.getAmount());
 
-		return transactionTemplate.execute(
-				status -> applyConfirmedCancellation(bookingId, payment.getId(), refundId));
+		SeatStatusEvent[] published = new SeatStatusEvent[1];
+		Booking cancelled = transactionTemplate.execute(
+				status -> applyConfirmedCancellation(bookingId, payment.getId(), refundId, published));
+		// Built inside the transaction (LAZY associations); published only
+		// after the commit above succeeded. A concurrent-cancellation no-op
+		// leaves the event null: the seat was already released by that first
+		// cancellation's own commit.
+		if (published[0] != null) {
+			seatStatusPublisher.publishAfterCommit(published[0]);
+		}
+		return cancelled;
 	}
 
 	/**
@@ -286,7 +346,8 @@ public class PaymentService {
 	 * booking/seat pair practically impossible; the defensive re-checks and
 	 * the Seat {@code @Version} optimistic lock are the final safety net.
 	 */
-	private Booking applyConfirmedCancellation(UUID bookingId, UUID paymentId, String refundId) {
+	private Booking applyConfirmedCancellation(UUID bookingId, UUID paymentId, String refundId,
+			SeatStatusEvent[] published) {
 		Booking booking = bookingRepository.findById(bookingId)
 				.orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + bookingId));
 		if (booking.getStatus() == BookingStatus.CANCELLED) {
@@ -314,6 +375,7 @@ public class PaymentService {
 		Payment payment = paymentRepository.findById(paymentId).orElseThrow();
 		payment.setStatus(PaymentStatus.REFUNDED);
 		payment.setRazorpayRefundId(refundId);
+		published[0] = SeatStatusEventFactory.available(booking);
 		return booking;
 	}
 

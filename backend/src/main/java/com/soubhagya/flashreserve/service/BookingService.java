@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import com.soubhagya.flashreserve.config.ReservationProperties;
 import com.soubhagya.flashreserve.dto.booking.ReservationResponse;
+import com.soubhagya.flashreserve.dto.event.SeatStatusEvent;
 import com.soubhagya.flashreserve.entity.Booking;
 import com.soubhagya.flashreserve.entity.Event;
 import com.soubhagya.flashreserve.entity.Seat;
@@ -54,6 +55,8 @@ public class BookingService {
 
 	private final TransactionTemplate transactionTemplate;
 
+	private final SeatStatusPublisher seatStatusPublisher;
+
 	public Booking getById(UUID id) {
 		return bookingRepository.findById(id)
 				.orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + id));
@@ -100,7 +103,11 @@ public class BookingService {
 	public Booking cancelBooking(UUID bookingId, UUID userId) {
 		Booking booking = getOwnedBooking(bookingId, userId);
 		return switch (booking.getStatus()) {
-			case PENDING -> transactionTemplate.execute(status -> cancelPending(bookingId, userId));
+			case PENDING -> {
+				Booking cancelled = transactionTemplate.execute(status -> cancelPending(bookingId, userId));
+				seatStatusPublisher.publishAfterCommit(eventOf(cancelled));
+				yield cancelled;
+			}
 			case CONFIRMED -> paymentService.cancelConfirmedBooking(bookingId);
 			case EXPIRED, CANCELLED -> throw new InvalidStateTransitionException(
 					"Cannot cancel booking in status " + booking.getStatus());
@@ -130,6 +137,20 @@ public class BookingService {
 	}
 
 	/**
+	 * Public seat event for a booking whose state change just committed. Built
+	 * eagerly while the entities are still attached: {@code Booking.seat} and
+	 * {@code Seat.event} are LAZY, so reading them after the transaction would
+	 * fail on detached entities (spring.jpa.open-in-view=false). Publication
+	 * itself stays strictly after the caller's commit.
+	 */
+	private static SeatStatusEvent eventOf(Booking booking) {
+		Seat seat = booking.getSeat();
+		boolean held = seat.getStatus() == SeatStatus.HELD;
+		return new SeatStatusEvent(booking.getEvent().getId(), seat.getId(), seat.getSeatNumber(),
+				seat.getStatus(), seat.getVersion(), held ? booking.getExpiresAt() : null);
+	}
+
+	/**
 	 * Reservation hot path. A per-seat Redis lock (eventId + seatId) absorbs
 	 * flash-sale contention before it reaches the database; inside the lock a
 	 * short PostgreSQL transaction performs the authoritative state change,
@@ -139,11 +160,13 @@ public class BookingService {
 	 * held.
 	 */
 	public ReservationResponse reserve(UUID userId, UUID eventId, UUID seatId) {
-		return reservationLockService.withSeatLock(eventId, seatId,
+		ReservationAndVersion result = reservationLockService.withSeatLock(eventId, seatId,
 				() -> transactionTemplate.execute(status -> doReserve(userId, eventId, seatId)));
+		seatStatusPublisher.publishAfterCommit(SeatStatusEventFactory.held(result.response(), result.seatVersion()));
+		return result.response();
 	}
 
-	private ReservationResponse doReserve(UUID userId, UUID eventId, UUID seatId) {
+	private ReservationAndVersion doReserve(UUID userId, UUID eventId, UUID seatId) {
 		Event event = eventRepository.findById(eventId)
 				.filter(candidate -> candidate.getStatus() == EventStatus.PUBLISHED)
 				.orElseThrow(() -> new ResourceNotFoundException("Event not found: " + eventId));
@@ -180,7 +203,7 @@ public class BookingService {
 			throw new InvalidStateTransitionException("Seat is no longer available.");
 		}
 
-		return ReservationResponse.from(booking);
+		return new ReservationAndVersion(ReservationResponse.from(booking), seat.getVersion());
 	}
 
 	/**
@@ -206,11 +229,25 @@ public class BookingService {
 					bookingId);
 			return false;
 		}
+		SeatStatusEvent released = null;
 		if (seat.getStatus() == SeatStatus.HELD) {
 			seat.setStatus(SeatStatus.AVAILABLE);
 			seatRepository.saveAndFlush(seat);
+			// Built INSIDE the transaction: Booking.seat/Seat.event are LAZY
+			// and the entities are detached once this transaction commits.
+			released = SeatStatusEventFactory.available(booking);
 		}
 		booking.setStatus(BookingStatus.EXPIRED);
+		final SeatStatusEvent published = released;
+		if (published != null) {
+			org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
+					new org.springframework.transaction.support.TransactionSynchronization() {
+						@Override
+						public void afterCommit() {
+							seatStatusPublisher.publishAfterCommit(published);
+						}
+					});
+		}
 		return true;
 	}
 
@@ -218,6 +255,9 @@ public class BookingService {
 		return booking.getStatus() == BookingStatus.PENDING
 				&& booking.getExpiresAt() != null
 				&& booking.getExpiresAt().isBefore(Instant.now());
+	}
+
+	record ReservationAndVersion(ReservationResponse response, long seatVersion) {
 	}
 
 	/**
