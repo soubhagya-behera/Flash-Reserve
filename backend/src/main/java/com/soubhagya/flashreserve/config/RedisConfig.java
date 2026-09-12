@@ -19,10 +19,16 @@ public class RedisConfig {
 
 	@Bean(destroyMethod = "shutdown")
 	RedissonClient redissonClient(@Value("${spring.data.redis.host:localhost}") String host,
-			@Value("${spring.data.redis.port:6379}") int port) {
+			@Value("${spring.data.redis.port:6379}") int port,
+			@Value("${spring.data.redis.password:}") String password,
+			@Value("${spring.data.redis.ssl.enabled:false}") boolean sslEnabled) {
 		Config config = new Config();
-		config.useSingleServer()
-				.setAddress("redis://" + host + ":" + port);
+		String scheme = sslEnabled ? "rediss://" : "redis://";
+		var server = config.useSingleServer()
+				.setAddress(scheme + host + ":" + port);
+		if (password != null && !password.isBlank()) {
+			server.setPassword(password);
+		}
 		return Redisson.create(config);
 	}
 

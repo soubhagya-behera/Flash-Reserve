@@ -70,7 +70,8 @@ class RegistrationOtpIntegrationTests {
 	}
 
 	private String randomIp() {
-		return "192.0.2." + ThreadLocalRandom.current().nextInt(10, 250);
+		ThreadLocalRandom r = ThreadLocalRandom.current();
+		return "10." + r.nextInt(0, 256) + "." + r.nextInt(0, 256) + "." + r.nextInt(2, 255);
 	}
 
 	private RequestPostProcessor fromIp(String ip) {

@@ -52,7 +52,10 @@ class ForgotPasswordIntegrationTests {
 	@MockitoBean EmailService emailService;
 
 	private String capturedOtp;
-	private String randomIp() { return "192.0.2." + ThreadLocalRandom.current().nextInt(10, 250); }
+	private String randomIp() {
+		ThreadLocalRandom r = ThreadLocalRandom.current();
+		return "10." + r.nextInt(0, 256) + "." + r.nextInt(0, 256) + "." + r.nextInt(2, 255);
+	}
 	private RequestPostProcessor fromIp(String ip){ return req->{req.setRemoteAddr(ip); return req;};}
 
 	@BeforeEach void capture(){

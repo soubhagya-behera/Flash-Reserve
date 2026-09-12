@@ -1,1 +1,22 @@
-.vscode
+# IDE
+.vscode/
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Build
+target/
+dist/
+node_modules/
+
+# Local secrets / config — never commit real credentials
+application*.properties
+!**/application-example.properties
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
