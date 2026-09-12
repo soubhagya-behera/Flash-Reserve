@@ -57,6 +57,8 @@ public class BookingService {
 
 	private final SeatStatusPublisher seatStatusPublisher;
 
+	private final PaymentTransitions paymentTransitions;
+
 	public Booking getById(UUID id) {
 		return bookingRepository.findById(id)
 				.orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + id));
@@ -207,54 +209,15 @@ public class BookingService {
 	}
 
 	/**
-	 * Expires a single due hold: Booking PENDING -> EXPIRED together with
-	 * Seat HELD -> AVAILABLE in one transaction. If the seat row was modified
-	 * concurrently, the optimistic lock fails and BOTH changes roll back;
-	 * the caller retries on the next pass with fresh state, so a newer seat
-	 * state is never silently overwritten.
-	 *
-	 * A seat that already advanced past HELD (BOOKED by a completed payment)
-	 * is never released and its booking is never expired here: the sale owns
-	 * the seat, so the hold must survive until the payment flow settles it.
+	 * Expires a single due hold atomically: Booking PENDING->EXPIRED,
+	 * Seat HELD->AVAILABLE and, if present, Payment PENDING->FAILED in the
+	 * same transaction. Delegates to {@link PaymentTransitions} so the Payment
+	 * PESSIMISTIC_WRITE serializes against concurrent confirmation, giving a
+	 * deterministic winner (either SUCCESS/CONFIRMED/BOOKED or
+	 * FAILED/EXPIRED/AVAILABLE, never mixed).
 	 */
-	@Transactional
 	public boolean expireIfDue(UUID bookingId) {
-		Booking booking = bookingRepository.findById(bookingId).orElse(null);
-		if (booking == null || !isDue(booking)) {
-			return false;
-		}
-		Seat seat = booking.getSeat();
-		if (seat.getStatus() == SeatStatus.BOOKED) {
-			log.warn("Booking {} is due but its seat is already BOOKED; the hold is not released",
-					bookingId);
-			return false;
-		}
-		SeatStatusEvent released = null;
-		if (seat.getStatus() == SeatStatus.HELD) {
-			seat.setStatus(SeatStatus.AVAILABLE);
-			seatRepository.saveAndFlush(seat);
-			// Built INSIDE the transaction: Booking.seat/Seat.event are LAZY
-			// and the entities are detached once this transaction commits.
-			released = SeatStatusEventFactory.available(booking);
-		}
-		booking.setStatus(BookingStatus.EXPIRED);
-		final SeatStatusEvent published = released;
-		if (published != null) {
-			org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
-					new org.springframework.transaction.support.TransactionSynchronization() {
-						@Override
-						public void afterCommit() {
-							seatStatusPublisher.publishAfterCommit(published);
-						}
-					});
-		}
-		return true;
-	}
-
-	private boolean isDue(Booking booking) {
-		return booking.getStatus() == BookingStatus.PENDING
-				&& booking.getExpiresAt() != null
-				&& booking.getExpiresAt().isBefore(Instant.now());
+		return paymentTransitions.expireIfDue(bookingId);
 	}
 
 	record ReservationAndVersion(ReservationResponse response, long seatVersion) {

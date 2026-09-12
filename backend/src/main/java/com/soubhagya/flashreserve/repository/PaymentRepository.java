@@ -8,7 +8,10 @@ import com.soubhagya.flashreserve.entity.Payment;
 import com.soubhagya.flashreserve.entity.enums.BookingStatus;
 import com.soubhagya.flashreserve.entity.enums.PaymentStatus;
 
+import jakarta.persistence.LockModeType;
+
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -21,6 +24,14 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID> {
 	Optional<Payment> findByPaymentReference(String paymentReference);
 
 	Optional<Payment> findByRazorpayOrderId(String razorpayOrderId);
+
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	@Query("select p from Payment p where p.booking.id = :bookingId")
+	Optional<Payment> findByBookingIdForUpdate(@Param("bookingId") UUID bookingId);
+
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	@Query("select p from Payment p where p.razorpayOrderId = :razorpayOrderId")
+	Optional<Payment> findByRazorpayOrderIdForUpdate(@Param("razorpayOrderId") String razorpayOrderId);
 
 	/**
 	 * Dashboard revenue aggregate: exactly one payment per booking

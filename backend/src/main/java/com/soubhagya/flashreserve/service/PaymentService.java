@@ -50,10 +50,7 @@ public class PaymentService {
 
 	private final SeatStatusPublisher seatStatusPublisher;
 
-	/** Slot indexes for the object holder passed into the confirming transaction. */
-	private static final int CONFIRMED_BOOKING = 0;
-
-	private static final int BOOKED_EVENT = 1;
+	private final PaymentTransitions paymentTransitions;
 
 	public Payment getById(UUID id) {
 		return paymentRepository.findById(id)
@@ -118,7 +115,6 @@ public class PaymentService {
 			return paymentRepository.saveAndFlush(payment);
 		}
 		catch (DataIntegrityViolationException ex) {
-			// A concurrent initiate for the same booking created the payment first.
 			return paymentRepository.findByBookingId(bookingId).orElseThrow();
 		}
 	}
@@ -136,12 +132,10 @@ public class PaymentService {
 	}
 
 	/**
-	 * Verifies a Razorpay checkout result. The signature and order-id checks
-	 * are pure computation and run outside any transaction; only the final
-	 * state change is a short transaction guarded by Seat {@code @Version}
-	 * optimistic locking, so a concurrent cancellation or expiration can never
-	 * be overwritten and a CONFIRMED booking always pairs with a BOOKED seat
-	 * and a SUCCESS payment.
+	 * Verifies a Razorpay checkout result. HMAC verification is pure computation
+	 * outside any transaction; the local state transition is a single short
+	 * transaction serialized via Payment PESSIMISTIC_WRITE in
+	 * {@link PaymentTransitions}, so concurrent expiration cannot be overwritten.
 	 */
 	public PaymentConfirmationResponse verify(UUID bookingId, UUID userId,
 			PaymentVerificationRequest request) {
@@ -152,18 +146,11 @@ public class PaymentService {
 						"Payment has not been initiated for this booking."));
 
 		if (payment.getStatus() == PaymentStatus.SUCCESS) {
-			// Idempotent replay of an already-confirmed payment: the stored,
-			// signature-proven outcome is authoritative, so HMAC verification
-			// is never re-run and no payment/booking/seat state is touched.
-			// The response is assembled inside a transaction because
-			// confirmationOf resolves the LAZY seat association and must not
-			// run on detached entities (spring.jpa.open-in-view=false).
 			return transactionTemplate.execute(status -> confirmationOf(bookingId));
 		}
 
 		if (request.isFailed()) {
-			// The checkout failed client-side; release the hold consistently.
-			return failAndPublish(bookingId, payment.getId());
+			return paymentTransitions.failByBookingId(bookingId);
 		}
 
 		if (!request.razorpayOrderId().equals(payment.getRazorpayOrderId())) {
@@ -175,121 +162,16 @@ public class PaymentService {
 			throw new PaymentVerificationException("Invalid payment signature.");
 		}
 
-		return confirmAndPublish(bookingId, payment.getId(), request.razorpayPaymentId());
-	}
-
-	private PaymentConfirmationResponse confirmAndPublish(UUID bookingId, UUID paymentId, String razorpayPaymentId) {
-		Object[] holder = new Object[2];
-		PaymentConfirmationResponse response = transactionTemplate
-				.execute(status -> holder[CONFIRMED_BOOKING] == null
-						? confirmInto(holder, bookingId, paymentId, razorpayPaymentId)
-						: null);
-		// The event was built INSIDE the transaction (Booking.seat/Seat.event
-		// are LAZY and detached afterwards); it is published strictly after
-		// the commit above succeeded.
-		seatStatusPublisher.publishAfterCommit((SeatStatusEvent) holder[BOOKED_EVENT]);
-		return response;
-	}
-
-	private PaymentConfirmationResponse confirmInto(Object[] holder, UUID bookingId, UUID paymentId,
-			String razorpayPaymentId) {
-		PaymentConfirmationResponse response = confirm(bookingId, paymentId, razorpayPaymentId);
-		Booking booked = bookingRepository.findById(bookingId).orElseThrow();
-		holder[CONFIRMED_BOOKING] = booked;
-		holder[BOOKED_EVENT] = SeatStatusEventFactory.booked(booked);
-		return response;
-	}
-
-	private PaymentConfirmationResponse confirm(UUID bookingId, UUID paymentId, String razorpayPaymentId) {
-		Booking booking = bookingRepository.findById(bookingId)
-				.orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + bookingId));
-		if (booking.getStatus() == BookingStatus.CONFIRMED) {
-			return confirmationOf(bookingId);
-		}
-		if (booking.getStatus() != BookingStatus.PENDING) {
-			throw new InvalidStateTransitionException(
-					"Cannot verify payment for booking in status " + booking.getStatus());
-		}
-
-		Seat seat = booking.getSeat();
-		if (seat.getStatus() != SeatStatus.HELD) {
-			throw new InvalidStateTransitionException("Seat is not held and cannot be booked");
-		}
-		seat.setStatus(SeatStatus.BOOKED);
-		try {
-			seatRepository.saveAndFlush(seat);
-		}
-		catch (ObjectOptimisticLockingFailureException ex) {
-			// A concurrent cancellation/expiration changed the seat first.
-			throw new InvalidStateTransitionException("Booking changed concurrently; payment not confirmed");
-		}
-
-		booking.setStatus(BookingStatus.CONFIRMED);
-		Payment payment = paymentRepository.findById(paymentId).orElseThrow();
-		payment.setStatus(PaymentStatus.SUCCESS);
-		payment.setRazorpayPaymentId(razorpayPaymentId);
-		return confirmationOf(bookingId);
-	}
-
-	private PaymentConfirmationResponse failAndPublish(UUID bookingId, UUID paymentId) {
-		SeatStatusEvent[] published = new SeatStatusEvent[1];
-		PaymentConfirmationResponse response = transactionTemplate.execute(status -> markFailed(bookingId, paymentId, published));
-		if (published[0] != null) {
-			seatStatusPublisher.publishAfterCommit(published[0]);
-		}
-		return response;
-	}
-
-	private PaymentConfirmationResponse markFailed(UUID bookingId, UUID paymentId, SeatStatusEvent[] published) {
-		Booking booking = bookingRepository.findById(bookingId)
-				.orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + bookingId));
-		boolean released = false;
-		if (booking.getStatus() == BookingStatus.PENDING) {
-			Seat seat = booking.getSeat();
-			if (seat.getStatus() == SeatStatus.HELD) {
-				seat.setStatus(SeatStatus.AVAILABLE);
-				try {
-					seatRepository.saveAndFlush(seat);
-				}
-				catch (ObjectOptimisticLockingFailureException ex) {
-					throw new InvalidStateTransitionException(
-							"Booking changed concurrently; payment not failed");
-				}
-				released = true;
-			}
-			booking.setStatus(BookingStatus.CANCELLED);
-		}
-		Payment payment = paymentRepository.findById(paymentId).orElseThrow();
-		payment.setStatus(PaymentStatus.FAILED);
-		if (released) {
-			// Built inside TX while LAZY associations are attached; published after commit.
-			Booking refreshed = bookingRepository.findById(bookingId).orElseThrow();
-			published[0] = SeatStatusEventFactory.available(refreshed);
-		}
-		return confirmationOf(bookingId);
-	}
-
-	private PaymentConfirmationResponse markFailed(UUID bookingId, UUID paymentId) {
-		SeatStatusEvent[] holder = new SeatStatusEvent[1];
-		PaymentConfirmationResponse r = markFailed(bookingId, paymentId, holder);
-		return r;
+		return paymentTransitions.confirmByBookingId(bookingId, request.razorpayPaymentId());
 	}
 
 	/**
 	 * Cancels a CONFIRMED paid booking with a full refund. The Razorpay
 	 * refund is requested FIRST, outside any database transaction, and only
-	 * after the provider accepts it do the local state changes (Payment
-	 * REFUNDED + refund reference, Booking CANCELLED, Seat BOOKED ->
-	 * AVAILABLE) run in one short atomic transaction guarded by the Seat
-	 * {@code @Version} optimistic lock. If the provider rejects the refund or
-	 * is unreachable, nothing local changes: the booking stays CONFIRMED and
-	 * the seat stays BOOKED.
-	 *
-	 * The per-seat Redis lock serializes concurrent cancellations of the same
-	 * booking (and against the reservation hot path), so a duplicated or
-	 * retried request can never issue a second refund: a replay always finds
-	 * the booking already CANCELLED with the refund reference persisted, and
-	 * is rejected without ever touching the provider again.
+	 * after the provider accepts it do the local state changes run in one
+	 * short atomic transaction guarded by the Seat {@code @Version} optimistic
+	 * lock. If the provider rejects the refund or is unreachable, nothing local
+	 * changes.
 	 */
 	public Booking cancelConfirmedBooking(UUID bookingId) {
 		Booking booking = bookingRepository.findById(bookingId)
@@ -302,10 +184,6 @@ public class PaymentService {
 		Booking booking = bookingRepository.findById(bookingId)
 				.orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + bookingId));
 		if (booking.getStatus() != BookingStatus.CONFIRMED) {
-			// Includes the replay of an already-cancelled booking: the
-			// persisted razorpay refund reference proves the money was
-			// reversed, so the safe replay behavior is to reject without
-			// re-refunding, re-releasing the seat or re-transitioning.
 			throw new InvalidStateTransitionException(
 					"Cannot cancel booking in status " + booking.getStatus());
 		}
@@ -321,38 +199,23 @@ public class PaymentService {
 					"No successful payment to refund for this booking.");
 		}
 
-		// Slow external provider call - deliberately OUTSIDE any database
-		// transaction. Nothing local has been mutated yet, so a failure here
-		// leaves booking CONFIRMED, payment SUCCESS and seat BOOKED.
 		String refundId = paymentProvider.refundPayment(payment.getRazorpayPaymentId(),
 				payment.getAmount());
 
 		SeatStatusEvent[] published = new SeatStatusEvent[1];
 		Booking cancelled = transactionTemplate.execute(
 				status -> applyConfirmedCancellation(bookingId, payment.getId(), refundId, published));
-		// Built inside the transaction (LAZY associations); published only
-		// after the commit above succeeded. A concurrent-cancellation no-op
-		// leaves the event null: the seat was already released by that first
-		// cancellation's own commit.
 		if (published[0] != null) {
 			seatStatusPublisher.publishAfterCommit(published[0]);
 		}
 		return cancelled;
 	}
 
-	/**
-	 * The single atomic database state change after a successful provider
-	 * refund. The per-seat Redis lock makes a concurrent writer to this
-	 * booking/seat pair practically impossible; the defensive re-checks and
-	 * the Seat {@code @Version} optimistic lock are the final safety net.
-	 */
 	private Booking applyConfirmedCancellation(UUID bookingId, UUID paymentId, String refundId,
 			SeatStatusEvent[] published) {
 		Booking booking = bookingRepository.findById(bookingId)
 				.orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + bookingId));
 		if (booking.getStatus() == BookingStatus.CANCELLED) {
-			// A concurrent cancellation already committed - never release
-			// the seat a second time and never re-write the payment.
 			return booking;
 		}
 		if (booking.getStatus() != BookingStatus.CONFIRMED) {

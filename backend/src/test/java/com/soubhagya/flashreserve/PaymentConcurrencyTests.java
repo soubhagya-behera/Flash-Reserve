@@ -178,7 +178,7 @@ class PaymentConcurrencyTests {
 		assertThat(booking.getStatus()).isEqualTo(BookingStatus.EXPIRED);
 		assertThat(seatRepository.findById(seat).orElseThrow().getStatus()).isEqualTo(SeatStatus.AVAILABLE);
 		assertThat(payment.getStatus())
-				.as("a failed-to-confirm payment stays pending").isEqualTo(PaymentStatus.PENDING);
+				.as("expiration marks pending payment as FAILED").isEqualTo(PaymentStatus.FAILED);
 	}
 
 	@Test
