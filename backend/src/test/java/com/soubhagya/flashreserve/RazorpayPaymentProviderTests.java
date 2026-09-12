@@ -26,7 +26,7 @@ class RazorpayPaymentProviderTests {
 	private static final String SECRET = "test-mode-secret-abcdef";
 
 	private final RazorpayPaymentProvider provider = new RazorpayPaymentProvider(
-			new RazorpayProperties("rzp_test_key", SECRET, "INR"));
+			new RazorpayProperties("rzp_test_key", SECRET, "INR", null));
 
 	@Test
 	void authenticSignatureIsAccepted() {

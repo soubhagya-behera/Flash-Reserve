@@ -25,6 +25,8 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID> {
 
 	Optional<Payment> findByRazorpayOrderId(String razorpayOrderId);
 
+	Optional<Payment> findByRazorpayPaymentId(String razorpayPaymentId);
+
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	@Query("select p from Payment p where p.booking.id = :bookingId")
 	Optional<Payment> findByBookingIdForUpdate(@Param("bookingId") UUID bookingId);
@@ -32,6 +34,10 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID> {
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	@Query("select p from Payment p where p.razorpayOrderId = :razorpayOrderId")
 	Optional<Payment> findByRazorpayOrderIdForUpdate(@Param("razorpayOrderId") String razorpayOrderId);
+
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	@Query("select p from Payment p where p.razorpayPaymentId = :razorpayPaymentId")
+	Optional<Payment> findByRazorpayPaymentIdForUpdate(@Param("razorpayPaymentId") String razorpayPaymentId);
 
 	/**
 	 * Dashboard revenue aggregate: exactly one payment per booking

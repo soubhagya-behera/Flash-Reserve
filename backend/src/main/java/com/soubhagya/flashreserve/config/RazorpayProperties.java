@@ -16,6 +16,8 @@ public record RazorpayProperties(
 
 		String keySecret,
 
-		@DefaultValue("INR") String currency) {
+		@DefaultValue("INR") String currency,
+
+		String webhookSecret) {
 
 }

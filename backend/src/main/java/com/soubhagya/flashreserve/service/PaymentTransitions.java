@@ -226,6 +226,60 @@ public class PaymentTransitions {
 				&& booking.getExpiresAt().isBefore(Instant.now());
 	}
 
+	/**
+	 * Provider-side refund reconciliation: never calls external refund API.
+	 * If CONFIRMED/BOOKED/SUCCESS, transitions to CANCELLED/AVAILABLE/REFUNDED
+	 * atomically and publishes AVAILABLE after commit. Otherwise ignored.
+	 */
+	@Transactional
+	public boolean reconcileRefund(String razorpayPaymentId, String razorpayOrderId, String razorpayRefundId) {
+		Payment payment = null;
+		if (razorpayPaymentId != null && !razorpayPaymentId.isBlank()) {
+			payment = paymentRepository.findByRazorpayPaymentIdForUpdate(razorpayPaymentId).orElse(null);
+		}
+		if (payment == null && razorpayOrderId != null && !razorpayOrderId.isBlank()) {
+			payment = paymentRepository.findByRazorpayOrderIdForUpdate(razorpayOrderId).orElse(null);
+		}
+		if (payment == null) {
+			throw new ResourceNotFoundException("Payment not found for refund: " + razorpayRefundId);
+		}
+		UUID bookingIdForRefund = payment.getBooking().getId();
+		Booking booking = bookingRepository.findById(bookingIdForRefund)
+				.orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + bookingIdForRefund));
+		Seat seat = booking.getSeat();
+
+		if (payment.getStatus() == PaymentStatus.REFUNDED) {
+			if (razorpayRefundId != null && razorpayRefundId.equals(payment.getRazorpayRefundId())) {
+				return false;
+			}
+			return false;
+		}
+		if (payment.getStatus() != PaymentStatus.SUCCESS) {
+			return false;
+		}
+		if (booking.getStatus() != BookingStatus.CONFIRMED || seat.getStatus() != SeatStatus.BOOKED) {
+			return false;
+		}
+		seat.setStatus(SeatStatus.AVAILABLE);
+		try {
+			seatRepository.saveAndFlush(seat);
+		}
+		catch (ObjectOptimisticLockingFailureException ex) {
+			throw new org.springframework.dao.OptimisticLockingFailureException("Seat changed concurrently", ex);
+		}
+		booking.setStatus(BookingStatus.CANCELLED);
+		payment.setStatus(PaymentStatus.REFUNDED);
+		payment.setRazorpayRefundId(razorpayRefundId);
+		SeatStatusEvent event = SeatStatusEventFactory.available(booking);
+		TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+			@Override
+			public void afterCommit() {
+				seatStatusPublisher.publishAfterCommit(event);
+			}
+		});
+		return true;
+	}
+
 	private PaymentConfirmationResponse confirmationOf(UUID bookingId) {
 		Booking booking = bookingRepository.findById(bookingId)
 				.orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + bookingId));
