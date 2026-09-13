@@ -1,0 +1,7 @@
+target/
+.mvn/wrapper/maven-wrapper.jar
+src/main/resources/application.properties
+.git
+.gitignore
+HELP.md
+.mvn/

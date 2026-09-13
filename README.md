@@ -264,3 +264,168 @@ Swagger UI includes an **Authorize** button - paste the JWT you get from `/api/a
 - AWS or any cloud deployment
 - Kafka or other message queues; WebSockets
 - CI/CD pipeline
+
+---
+
+## Deployment (Production)
+
+This repository is prepared for:
+
+- **Backend:** Render Web Service (Docker) — Spring Boot 4.1.x, Java 17
+- **Frontend:** Vercel — React + Vite (JavaScript)
+- **Database:** Supabase PostgreSQL
+- **Redis:** Render Key Value (Redis)
+- **Payments:** Razorpay TEST MODE
+
+No deployment is performed from this repository; you configure the accounts and set the environment variables below.
+
+### Architecture
+
+```
+Browser (Vercel) ──HTTPS──>  Vercel static (React + Vite)
+        │
+        │  VITE_API_BASE_URL = https://<render-backend>.onrender.com
+        ▼
+Render Web Service (Docker) ──jdbc:postgresql + sslmode=require──> Supabase PostgreSQL
+        │
+        │  redis:// or rediss:// + password
+        ▼
+Render Key Value (Redis)  ── locks, rate-limit buckets, OTP, SSE RTopic
+        │
+        └── Razorpay TEST MODE (server-side order create + signature verify + webhook)
+```
+
+### Backend — Render Web Service (Docker)
+
+**Source:** `backend/Dockerfile` (multi-stage, Java 17).
+
+- Build: `maven:3.9-eclipse-temurin-17` → `mvn package -DskipTests` (the POM excludes `application.properties` and copies `application-example.properties` as `application.properties`, so no local secrets are baked in).
+- Runtime: `eclipse-temurin:17-jre-jammy` (JRE only, minimal, non-root `appuser`).
+- Entrypoint: `java -jar /app/app.jar` — respects `server.port=${PORT:8080}` (Render injects `PORT`).
+- Health check: `GET /actuator/health` (only `health` is exposed; `management.endpoints.web.exposure.include=health`).
+- No `application.properties` or secrets are copied into the image; `.dockerignore` excludes `target/` and `application.properties`.
+
+**Render settings:**
+
+| Setting | Value |
+|---|---|
+| Runtime | Docker |
+| Dockerfile path | `backend/Dockerfile` |
+| Build context | `backend/` (or repo root with `backend/Dockerfile` — Render supports either; keep the `COPY pom.xml` / `COPY src` paths consistent) |
+| Health check path | `/actuator/health` |
+| Port | Render injects `PORT` automatically; app binds via `server.port=${PORT:8080}` |
+| Branch | `main` (or your deploy branch) |
+
+**Required environment variables (Render → Environment):**
+
+| Variable | Where | Notes |
+|---|---|---|
+| `SPRING_PROFILES_ACTIVE` | `production` | Enables `ProductionProfileInitializer`: disables Swagger/OpenAPI and forces `jwt.secret=${JWT_SECRET}` with no fallback |
+| `PORT` | Render sets automatically | Do not set manually; app already uses `server.port=${PORT:8080}` |
+| `DATABASE_URL` | `jdbc:postgresql://<supabase-host>:5432/postgres?sslmode=require` | Full JDBC URL. Prefer `sslmode=require` for Supabase. See Supabase section. |
+| `DB_USERNAME` | Supabase user (e.g. `postgres.<project-ref>`) | From Supabase → Database → Connection string |
+| `DB_PASSWORD` | Supabase password | Never commit; set in Render only |
+| `JWT_SECRET` | random ≥32 chars, `openssl rand -base64 64` | Required in `production`; no default — startup fails if missing/placeholder |
+| `REDIS_HOST` | Render Key Value internal hostname (e.g. `redis-xxxxx`) | Use **internal** host when backend and Redis share the same Render region (no TLS) |
+| `REDIS_PORT` | `6379` | Render Key Value port |
+| `REDIS_PASSWORD` | Render Key Value password | Set when Redis requires auth; blank for local dev |
+| `REDIS_SSL_ENABLED` | `false` (internal) / `true` (external/TLS) | `false` for Render internal URL (`redis://`), `true` for external `rediss://` |
+| `CORS_ALLOWED_ORIGINS` | `https://<your-vercel-app>.vercel.app` | Comma-separated allow-list; `*` is never allowed; empty disables CORS (local dev via Vite proxy) |
+| `RAZORPAY_KEY_ID` | `rzp_test_…` | TEST MODE key id — public; backend exposes it to frontend via payment-initiation API |
+| `RAZORPAY_KEY_SECRET` | `…` | TEST MODE secret — **backend only**, never expose to frontend |
+| `RAZORPAY_WEBHOOK_SECRET` | `…` | From Razorpay Dashboard → Webhooks → Secret — backend only |
+| `MAIL_USERNAME` | Gmail address for OTP | The OTP sender account |
+| `MAIL_PASSWORD` | Gmail App Password (not normal password) | https://myaccount.google.com/apppasswords |
+| `JWT_EXPIRATION_MS` | `3600000` (optional) | Override JWT TTL; defaults to 1h |
+| `RAZORPAY_CURRENCY` | `INR` (optional) | Override currency; defaults to `INR` |
+
+Optional tuning (all have local defaults): `RESERVATION_HOLD_DURATION`, `RESERVATION_EXPIRATION_INTERVAL`, `RESERVATION_LOCK_WAIT_DURATION`, `RESERVATION_RATE_LIMIT_CAPACITY`, `RESERVATION_RATE_LIMIT_REFILL_PERIOD`, `AUTH_LOGIN_RATE_LIMIT_CAPACITY`, `AUTH_LOGIN_RATE_LIMIT_REFILL_PERIOD`, `AUTH_REGISTRATION_RATE_LIMIT_CAPACITY`, `AUTH_REGISTRATION_RATE_LIMIT_REFILL_PERIOD`.
+
+Flyway: `spring.flyway.enabled=true`, `ddl-auto=validate`, `baseline-on-migrate=true`, `baseline-version=1` — existing `V1` and `V2` migrations are unchanged; no new migration is created for deployment.
+
+### Supabase PostgreSQL — Connection
+
+- In Supabase Dashboard → Database → Connect → `JDBC` (or `Connection string` → `JDBC`): copy the JDBC URL. Ensure `?sslmode=require` is present for production TLS. Example placeholder:
+  ```
+  jdbc:postgresql://db.<project-ref>.supabase.co:5432/postgres?sslmode=require
+  ```
+- If Supabase shows a `postgresql://` (non-JDBC) URL, convert the scheme to `jdbc:postgresql://` and keep the same host/user/password/query.
+- Set `DATABASE_URL` to that full JDBC URL, plus `DB_USERNAME` / `DB_PASSWORD` separately (the example properties use `${DATABASE_URL}`, `${DB_USERNAME}`, `${DB_PASSWORD}`). Never hardcode the URL, username, or password in the repository.
+- The app validates the schema with `ddl-auto=validate` and Flyway; it never modifies DDL via Hibernate.
+
+### Render Key Value (Redis) — Connection
+
+- Create a **Render Key Value** (Redis) in the **same region** as the backend service to use the internal URL (lower latency, no TLS).
+- Use the internal hostname/port/password shown in Render → Key Value → Connections → Internal. Set:
+  ```
+  REDIS_HOST=<internal-hostname>
+  REDIS_PORT=6379
+  REDIS_PASSWORD=<password-if-required>
+  REDIS_SSL_ENABLED=false
+  ```
+- If connecting externally (different region or from local), use the external URL and set `REDIS_SSL_ENABLED=true` (client uses `rediss://`).
+- `RedisConfig.java:21` builds `redis://` or `rediss://` based on `REDIS_SSL_ENABLED` and sets `password` when non-blank. Distributed reservation locks, rate limiting, OTP storage, and SSE `RTopic` pub-sub all use this single `RedissonClient`.
+
+### Frontend — Vercel
+
+**Source:** `frontend/` — Vite + React (JavaScript, no TypeScript).
+
+| Setting | Value |
+|---|---|
+| Framework preset | Vite |
+| Build command | `npm run build` |
+| Output directory | `dist` |
+| Node version | 18+ (Vercel default) |
+
+**Required environment variable (Vercel → Project → Settings → Environment Variables):**
+
+| Variable | Value | Scope |
+|---|---|---|
+| `VITE_API_BASE_URL` | `https://<render-backend>.onrender.com` | Production (and Preview if you use preview backends) |
+
+- Leave `VITE_API_BASE_URL` **empty** for local dev — Vite proxies `/api` to `http://localhost:8080` (`frontend/vite.config.js:10`).
+- Only `VITE_*` variables are exposed to the browser. Never put `JWT_SECRET`, `DB_*`, `REDIS_*`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`, `MAIL_*` in the frontend — `frontend/.env.example:1` documents this.
+- Only the **public** Razorpay key id (`RAZORPAY_KEY_ID` / `rzp_test_…`) may be exposed to the frontend, and only via the backend's payment-initiation response (`PaymentInitiationResponse.razorpayKeyId`), never as a frontend env secret.
+- After Vercel assigns the production URL (e.g. `https://flash-reserve.vercel.app`), set the backend's `CORS_ALLOWED_ORIGINS` to exactly that origin:
+  ```
+  CORS_ALLOWED_ORIGINS=https://flash-reserve.vercel.app
+  ```
+  For multiple origins: `https://app.example.com,https://admin.example.com`. Never use `*` when `allowCredentials=true` (`CorsConfig.java:46` filters it out).
+
+### Verification checklist (local, before deploy)
+
+```bash
+# Backend — no secrets baked into the JAR
+cd backend
+mvn package -DskipTests
+jar tf target/flashreserve-0.0.1-SNAPSHOT.jar | grep application.properties
+unzip -p target/flashreserve-0.0.1-SNAPSHOT.jar BOOT-INF/classes/application.properties | grep -E "server.port|RAZORPAY|MAIL|DATABASE_URL"
+
+# Backend — tests (require local PostgreSQL + Redis)
+mvn test                    # full suite; see note on max_connections below
+mvn test -Dtest=DatasourcePropertiesTests,RedisConfigTests,CorsIntegrationTests  # fast, no DB needed for these
+
+# Frontend
+cd ../frontend
+npm run lint
+npm run build               # produces dist/
+
+# Docker (requires Docker Desktop; slow on throttled networks — Render builds faster)
+docker pull eclipse-temurin:17-jre-jammy
+docker pull maven:3.9-eclipse-temurin-17
+docker build -f backend/Dockerfile -t flashreserve-backend:test backend
+
+# Git hygiene
+git status                  # must show only intended changes
+git diff --cached --name-only
+grep -r "<db-password-prefix>|<gmail-username>|<razorpay-key-id-prefix>|<mail-app-password-prefix>" backend/src/main/resources/application-example.properties && echo "LEAKED" || echo "clean"
+```
+
+**Known local test flake:** `FATAL: sorry, too many clients already` when running the full backend test suite in parallel on a local PostgreSQL with `max_connections=100`. Each `SpringBootTest` context opens a Hikari pool (`maximum-pool-size=5` — `application-example.properties:15`); many contexts in parallel can exceed 100. Mitigations: run a subset (`-Dtest=...`), run sequentially, or raise `max_connections` in `postgresql.conf` (requires restart). Not a production blocker — production uses a single Render instance per deploy with a single pool.
+
+### Secrets hygiene
+
+- `.gitignore:14` ignores `application*.properties` (except `application-example.properties`), `.env`, `.env.*` (except `.env.example`).
+- `backend/.gitignore:5` mirrors this.
+- `backend/pom.xml:119` excludes `application.properties` from the JAR and `backend/pom.xml:128` copies `application-example.properties` as `application.properties` at build time — so `backend/src/main/resources/application.properties` (which contains local secrets and is git-ignored) can never be baked into `target/*.jar` or the Docker image.
+- Actuator exposes only `health` (`application-example.properties:150`).
