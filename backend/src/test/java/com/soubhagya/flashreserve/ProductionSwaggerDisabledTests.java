@@ -13,6 +13,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,6 +41,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Transactional
 @ActiveProfiles("production")
+// The production profile fail-fasts on a blank CORS allow-list, so this
+// context gets one allowed origin; the tests here cover API docs/security.
+@TestPropertySource(properties = {
+		"app.cors.allowed-origins=https://app.example.com"
+})
 class ProductionSwaggerDisabledTests {
 
 	@Autowired

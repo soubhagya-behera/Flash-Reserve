@@ -54,6 +54,10 @@ class ProductionJwtSecretConfigurationTests {
 		// Surefire sets jwt.secret as a system property for the entire test
 		// JVM; a real deployment has no such override, so remove it here.
 		System.clearProperty("jwt.secret");
+		// The production profile fail-fasts on a blank CORS allow-list; give
+		// the simulated deployment a valid value so the JWT assertions below
+		// remain the root cause under test.
+		System.setProperty("CORS_ALLOWED_ORIGINS", "https://app.example.com");
 	}
 
 	@AfterEach
@@ -63,6 +67,7 @@ class ProductionJwtSecretConfigurationTests {
 			startedContext = null;
 		}
 		System.clearProperty("JWT_SECRET");
+		System.clearProperty("CORS_ALLOWED_ORIGINS");
 		if (originalJwtSecretProperty != null) {
 			System.setProperty("jwt.secret", originalJwtSecretProperty);
 		}
