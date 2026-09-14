@@ -1,6 +1,7 @@
 package com.soubhagya.flashreserve;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -113,6 +114,10 @@ class CorsIntegrationTests {
 			"jwt.secret=test-secret-that-is-definitely-longer-than-32-bytes!!",
 			"jwt.expiration-ms=900000"
 	})
+	// The blank-allow-list behavior under test only exists when the runner
+	// environment provides NO CORS_ALLOWED_ORIGINS; skip runs (like the
+	// production-path verification run) that export the real variable.
+	@DisabledIfEnvironmentVariable(named = "CORS_ALLOWED_ORIGINS", matches = "\\S+")
 	static class NoCorsConfiguredTests {
 		@Autowired MockMvc mockMvc;
 
