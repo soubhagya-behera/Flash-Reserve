@@ -760,7 +760,7 @@ Supabase PostgreSQL                   Render Key Value (Redis)
 Honest constraints, verified against the repo:
 
 - **TEST MODE payments only** — no real-money processing; production Razorpay is future work.
-- **Not yet deployed** — configuration is prepared and documented, but no live backend/frontend URL exists.
+
 - **Redis is required** — reservation and auth rate limiting fail closed (`503`) without it.
 - **Single service** — no Kafka/RabbitMQ, no WebSocket transport (SSE only), no microservices (deliberate — see above).
 - **Realtime is best-effort UI sync** — SSE + transient pub/sub; PostgreSQL stays authoritative, and clients refetch on reconnect.
