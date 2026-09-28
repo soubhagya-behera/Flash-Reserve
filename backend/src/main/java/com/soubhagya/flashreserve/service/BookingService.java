@@ -173,6 +173,10 @@ public class BookingService {
 				.filter(candidate -> candidate.getStatus() == EventStatus.PUBLISHED)
 				.orElseThrow(() -> new ResourceNotFoundException("Event not found: " + eventId));
 
+		if (!event.getEventDate().isAfter(Instant.now())) {
+			throw new InvalidStateTransitionException("Event has already started and is no longer bookable.");
+		}
+
 		Seat seat = seatRepository.findByIdAndEventId(seatId, eventId)
 				.orElseThrow(() -> new ResourceNotFoundException("Seat not found for event " + eventId));
 

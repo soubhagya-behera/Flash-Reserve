@@ -393,8 +393,10 @@ class EventApiIntegrationTests {
 	}
 
 	private long publishedEventCount() {
+		Instant now = Instant.now();
 		return eventRepository.findAll().stream()
-				.filter(event -> event.getStatus() == EventStatus.PUBLISHED)
+				.filter(event -> event.getStatus() == EventStatus.PUBLISHED
+						&& event.getEventDate().isAfter(now))
 				.count();
 	}
 

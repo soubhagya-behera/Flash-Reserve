@@ -37,8 +37,9 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/events")
 @RequiredArgsConstructor
 @Tag(name = "Events", description = """
-		Public, read-only browsing of published events and their seat maps. No JWT \
-		required. Draft, cancelled and completed events are never returned.""")
+		Public, read-only browsing of published upcoming events and their seat maps. No JWT \
+		required. Draft, cancelled and completed events are never returned, and neither \
+		are PUBLISHED events whose start date/time has passed.""")
 public class EventController {
 
 	private final EventService eventService;
@@ -48,10 +49,10 @@ public class EventController {
 	@GetMapping
 	@Operation(summary = "List published events",
 			description = """
-				Public, paginated catalog of PUBLISHED events, sorted by event date \
-				ascending. Supports standard Spring pagination and sorting query \
-				parameters: page (0-based), size, and sort (e.g. sort=eventDate,desc). \
-				Response is a Spring PagedModel wrapper.""")
+				Public, paginated catalog of PUBLISHED upcoming events (startDateTime \
+				in the future), sorted by event date ascending. Supports standard \
+				Spring pagination and sorting query parameters: page (0-based), size, \
+				and sort (e.g. sort=eventDate,desc). Response is a Spring PagedModel wrapper.""")
 	@ApiResponses({
 			@ApiResponse(responseCode = "200", description = "Page of published events"),
 			@ApiResponse(responseCode = "400", description = "Invalid pagination or sort parameter", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ApiError.class)))

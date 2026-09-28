@@ -18,6 +18,8 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
 
 	Page<Event> findByStatus(EventStatus status, Pageable pageable);
 
+	Page<Event> findByStatusAndEventDateAfter(EventStatus status, Instant date, Pageable pageable);
+
 	/**
 	 * Dashboard aggregate: one grouped count per event status instead of
 	 * loading events into memory. Absent statuses simply mean zero.

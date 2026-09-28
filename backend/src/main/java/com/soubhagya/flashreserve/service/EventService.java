@@ -62,12 +62,12 @@ public class EventService {
 	}
 
 	public Page<Event> getPublishedEvents(Pageable pageable) {
-		return eventRepository.findByStatus(EventStatus.PUBLISHED, pageable);
+		return eventRepository.findByStatusAndEventDateAfter(EventStatus.PUBLISHED, Instant.now(), pageable);
 	}
 
 	public Event getPublishedEvent(UUID id) {
 		Event event = getById(id);
-		if (event.getStatus() != EventStatus.PUBLISHED) {
+		if (event.getStatus() != EventStatus.PUBLISHED || !event.getEventDate().isAfter(Instant.now())) {
 			throw new ResourceNotFoundException("Event not found: " + id);
 		}
 		return event;

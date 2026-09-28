@@ -1,0 +1,124 @@
+/* ============================================================
+   FlashReserve — Pending payment card ("Needs your attention")
+   Contained responsive card: badge row, prominent title,
+   secondary venue/date, obvious countdown and a CTA that
+   always stays inside the card. Flex column + min-width: 0
+   so long names wrap instead of overflowing.
+   ============================================================ */
+
+.pending-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  min-width: 0;
+  max-width: 100%;
+  height: 100%;
+  padding: var(--fr-space-md);
+  overflow-wrap: break-word;
+}
+
+.pending-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.pending-card__label {
+  padding: 0.25rem 0.7rem;
+  border-radius: var(--fr-radius-full);
+  font-size: var(--fr-text-xs);
+  font-weight: 700;
+  letter-spacing: var(--fr-tracking-caps);
+  background: var(--fr-warning-soft);
+  color: var(--fr-warning);
+  white-space: nowrap;
+}
+
+.pending-card__seat {
+  font-size: var(--fr-text-xs);
+  font-weight: 700;
+  color: var(--fr-primary-strong);
+  background: var(--fr-primary-soft);
+  padding: 0.25rem 0.7rem;
+  border-radius: var(--fr-radius-full);
+  white-space: nowrap;
+}
+
+.pending-card__event {
+  min-width: 0;
+  margin: 0;
+  font-family: var(--fr-font-display);
+  font-size: var(--fr-text-h3);
+  line-height: var(--fr-leading-heading);
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.pending-card__event-link {
+  display: inline;
+  min-width: 0;
+  text-decoration: none;
+  color: inherit;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.pending-card__event-link:hover {
+  color: var(--fr-primary-strong);
+}
+
+.pending-card__venue {
+  min-width: 0;
+  margin: 0;
+  color: var(--fr-text-soft);
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.pending-card__when {
+  min-width: 0;
+  margin: 0;
+  font-size: var(--fr-text-sm);
+  color: var(--fr-text-muted);
+  overflow-wrap: break-word;
+}
+
+.pending-card__countdown {
+  min-width: 0;
+  margin: 0.3rem 0 0;
+  padding-top: 0.6rem;
+  border-top: 1px dashed var(--fr-border-strong);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fr-text-md);
+  color: var(--fr-info);
+  overflow-wrap: break-word;
+}
+
+.pending-card__countdown strong {
+  font-weight: 700;
+  font-size: var(--fr-text-h3);
+  font-variant-numeric: tabular-nums;
+}
+
+.pending-card .fr-btn {
+  width: 100%;
+  justify-content: center;
+  margin-top: 0.35rem;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.pending-card .fr-alert {
+  width: 100%;
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+.pending-card__expired {
+  margin: 0;
+  color: var(--fr-text-soft);
+  overflow-wrap: break-word;
+}
