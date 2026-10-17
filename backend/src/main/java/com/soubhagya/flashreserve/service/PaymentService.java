@@ -23,7 +23,6 @@ import com.soubhagya.flashreserve.repository.BookingRepository;
 import com.soubhagya.flashreserve.repository.PaymentRepository;
 import com.soubhagya.flashreserve.repository.SeatRepository;
 
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -72,8 +71,24 @@ public class PaymentService {
 	 * comes exclusively from the event's server-side ticket price - the client
 	 * never supplies one. The Razorpay call happens OUTSIDE any database
 	 * transaction; only the two small local writes are transactional.
+	 *
+	 * The entire sequence runs under the same per-seat distributed lock as
+	 * {@link #cancelConfirmedBooking}, so concurrent initiations for the same
+	 * booking serialize: the first creates and persists the provider order, the
+	 * second observes it and reuses it. Without the lock both callers could pass
+	 * the null-order check, create two provider orders, and race the
+	 * read-then-write in {@link #attachOrder} - returning an order id that does
+	 * not match the persisted one and so breaking later verification and
+	 * webhook reconciliation.
 	 */
 	public PaymentInitiationResponse initiate(UUID bookingId, UUID userId) {
+		Booking booking = bookingRepository.findByIdAndUserId(bookingId, userId)
+				.orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + bookingId));
+		return reservationLockService.withSeatLock(booking.getEvent().getId(), booking.getSeat().getId(),
+				() -> initiateWithinLock(bookingId, userId));
+	}
+
+	private PaymentInitiationResponse initiateWithinLock(UUID bookingId, UUID userId) {
 		Payment payment = transactionTemplate.execute(status -> findOrCreatePayment(bookingId, userId));
 
 		if (payment.getRazorpayOrderId() == null) {
@@ -111,12 +126,7 @@ public class PaymentService {
 
 		Payment payment = new Payment(booking, amount);
 		payment.setPaymentReference("PAY-" + UUID.randomUUID());
-		try {
-			return paymentRepository.saveAndFlush(payment);
-		}
-		catch (DataIntegrityViolationException ex) {
-			return paymentRepository.findByBookingId(bookingId).orElseThrow();
-		}
+		return paymentRepository.saveAndFlush(payment);
 	}
 
 	private Payment attachOrder(UUID paymentId, String razorpayOrderId) {
